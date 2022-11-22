@@ -1,0 +1,325 @@
+{
+  "general": {
+    "accessibility": {
+      "refresh_page": "Memilih satu pilihan akan mengakibatkan segar semula halaman penuh.",
+      "unit_price_separator": "per",
+      "selection_help": "Tekan kekunci ruang, kemudian kekunci anak panah untuk membuat pemilihan."
+    },
+    "meta": {
+      "tags": "Tag \"{{ tags }}\"",
+      "page": "Halaman {{ page }}"
+    },
+    "404": {
+      "title": "Halaman Tidak Dijumpai",
+      "subtext": "Halaman yang anda minta tidak lagi wujud. Maaf tentang itu.",
+      "visit_homepage": "Lawati halaman utama kami"
+    },
+    "password_page": {
+      "login_form_heading": "Masuk kedai menggunakan kata laluan",
+      "login_form_password_label": "Kata laluan",
+      "login_form_password_placeholder": "Kata laluan anda",
+      "login_form_submit": "Masukkan",
+      "signup_form_email_label": "E-mel",
+      "signup_form_success": "Kami akan menghantar e-mel kepada anda sebelum kami buka!",
+      "admin_link_html": "Adakah anda pemilik kedai? <a href=\"/admin\" class=\"text-link\">Log masuk di sini</a>",
+      "password_link": "Masuk menggunakan kata laluan",
+      "powered_by_shopify_html": "Kedai ini akan dikuasakan oleh {{ shopify }}",
+      "close_modal": "tutup (esc)"
+    },
+    "social": {
+      "share_on_facebook": "Kongsi",
+      "share_on_twitter": "Tweet",
+      "share_on_pinterest": "Pin ia",
+      "alt_text": {
+        "share_on_facebook": "Kongsi di Facebook",
+        "share_on_twitter": "Tweet di Twitter",
+        "share_on_pinterest": "Pin di Pinterest"
+      }
+    },
+    "search": {
+      "results_with_count": {
+        "one": "{{ count }} menghasilkan \"{{ term }}\"",
+        "other": "{{ count }} keputusan untuk \"{{ term }}\""
+      },
+      "no_results_html": "Carian anda untuk \"{{ terms }}\"tidak menghasilkan sebarang keputusan.",
+      "title": {
+        "one": "Cari inventori kami daripada {{ count }} produk",
+        "other": "Cari inventori kami daripada {{ count }} produk"
+      },
+      "placeholder": "Cari kedai kami",
+      "submit": "Carian",
+      "read_more": "Baca lebih lanjut",
+      "close_search": "tutup (esc)"
+    },
+    "newsletter_form": {
+      "email_placeholder": "Alamat e-mel",
+      "confirmation": "Terima kasih kerana melanggan",
+      "submit": "Langgan"
+    },
+    "payment": {
+      "method": "Kaedah bayaran"
+    }
+  },
+  "blogs": {
+    "article": {
+      "read_more": "Baca artikel",
+      "back_to_blog": "Kembali kepada {{ title }}",
+      "view_all": "Lihat semua",
+      "share_this_post": "Kongsi siaran ini"
+    },
+    "comments": {
+      "title": "Tinggalkan komen",
+      "name": "Nama",
+      "email": "E-mel",
+      "message": "Mesej",
+      "post": "Siar komen",
+      "moderated": "Nota, komen mesti diluluskan sebelum diterbitkan",
+      "success_moderated": "Komen anda telah berjaya disiarkan. Kami akan menerbitkannya dalam sedikit masa lagi, kerana blog kami disederhanakan.",
+      "success": "Komen anda telah berjaya disiarkan! Terima kasih!",
+      "with_count": {
+        "one": "{{ count }} komen",
+        "other": "{{ count }} komen"
+      }
+    }
+  },
+  "cart": {
+    "general": {
+      "title": "Troli anda",
+      "remove": "Alih keluar",
+      "note": "Arahan khas untuk penjual",
+      "subtotal": "Subjumlah",
+      "taxes_and_shipping_at_checkout": "Cukai dan penghantaran dikira semasa daftar keluar",
+      "taxes_and_shipping_policy_at_checkout_html": "Cukai dan <a href=\"{{ link }}\">penghantaran</a> dikira semasa daftar keluar",
+      "taxes_included_but_shipping_at_checkout": "Termasuk cukai dan penghantaran dikira semasa daftar keluar",
+      "taxes_included_and_shipping_policy_html": "Termasuk cukai. <a href=\"{{ link }}\">Penghantaran</a> dikira semasa daftar keluar.",
+      "update": "Kemas kini troli",
+      "checkout": "Daftar keluar",
+      "empty": "Troli anda kosong pada masa ini.",
+      "cookies_required": "Dayakan kuki untuk menggunakan troli beli-belah",
+      "continue_browsing_html": "Teruskan melayari <a href=\"{{ link }}\">di sini</a>.",
+      "close_cart": "Tutup troli",
+      "savings_html": "Anda menyimpan {{ price }}"
+    },
+    "label": {
+      "product": "Produk",
+      "price": "Harga",
+      "quantity": "Kuantiti",
+      "reduce_quantity": "Kurangkan kuantiti item dengan satu",
+      "increase_quantity": "Tingkatkan kuantiti item dengan satu",
+      "total": "Jumlah"
+    }
+  },
+  "collections": {
+    "general": {
+      "no_matches": "Maaf, tiada produk dalam koleksi ini",
+      "tags": "Tapis mengikut",
+      "all_tags": "Semua produk",
+      "show_more": "Lihat lebih lanjut",
+      "number_products": {
+        "one": "{{ count }} produk",
+        "other": "{{ count }} produk"
+      },
+      "collection_label": "Koleksi"
+    },
+    "sorting": {
+      "title": "Isih mengikut"
+    }
+  },
+  "contact": {
+    "form": {
+      "name": "Nama",
+      "email": "E-mel",
+      "phone": "Nombor Telefon",
+      "message": "Mesej",
+      "send": "Hantar",
+      "post_success": "Terima kasih kerana menghubungi kami. Kami akan menghubungi anda secepat mungkin."
+    }
+  },
+  "customer": {
+    "account": {
+      "title": "Akaun saya",
+      "details": "Butiran Akaun",
+      "view_addresses": "Lihat Alamat",
+      "return": "Kembali ke Butiran Akaun"
+    },
+    "activate_account": {
+      "title": "Aktifkan Akaun",
+      "subtext": "Cipta kata laluan anda untuk mengaktifkan akaun anda.",
+      "password": "Kata laluan",
+      "password_confirm": "Sahkan Kata Laluan",
+      "submit": "Aktifkan Akaun",
+      "cancel": "Tolak Jemputan"
+    },
+    "addresses": {
+      "title": "Alamat Anda",
+      "default": "Lalai",
+      "add_new": "Tambah Alamat Baharu",
+      "edit_address": "Edit alamat",
+      "first_name": "Nama Pertama",
+      "last_name": "Nama Terakhir",
+      "company": "Syarikat",
+      "address1": "Alamat1",
+      "address2": "Alamat2",
+      "city": "Bandar",
+      "country": "Negara/Wilayah",
+      "province": "Wilayah",
+      "zip": "Poskod/Kod Zip",
+      "phone": "Telefon",
+      "set_default": "Tetapkan sebagai alamat lalai",
+      "add": "Tambah Alamat",
+      "update": "Kemas Kini Alamat",
+      "cancel": "Batalkan",
+      "edit": "Edit",
+      "delete": "Padam",
+      "delete_confirm": "Adakah anda pasti ingin memadamkan alamat ini?"
+    },
+    "login": {
+      "title": "Log masuk",
+      "email": "E-mel",
+      "password": "Kata laluan",
+      "forgot_password": "Lupa kata laluan anda?",
+      "create_account": "Cipta akaun",
+      "sign_in": "Daftar Masuk",
+      "cancel": "Kembali ke Kedai",
+      "guest_title": "Teruskan sebagai tetamu",
+      "guest_continue": "Teruskan"
+    },
+    "orders": {
+      "title": "Sejarah Pesanan",
+      "order_number": "Pesanan",
+      "date": "Tarikh",
+      "payment_status": "Status Pembayaran",
+      "fulfillment_status": "Status Pemenuhan",
+      "total": "Jumlah",
+      "none": "Anda belum membuat sebarang pesanan."
+    },
+    "order": {
+      "title": "Pesanan {{ name }}",
+      "date": "Dibuat pada {{ date }}",
+      "cancelled": "Pesanan Dibatalkan pada {{ date }}",
+      "cancelled_reason": "Sebab: {{ reason }}",
+      "billing_address": "Alamat Pengebilan",
+      "payment_status": "Status Pembayaran",
+      "shipping_address": "Alamat Penghantaran",
+      "fulfillment_status": "Status Pemenuhan",
+      "discount": "Diskaun",
+      "shipping": "Penghantaran",
+      "tax": "Cukai",
+      "product": "Produk",
+      "sku": "SKU",
+      "price": "Harga",
+      "quantity": "Kuantiti",
+      "total": "Jumlah",
+      "fulfilled_at": "Dipenuhi {{ date }}",
+      "subtotal": "Subjumlah",
+      "track_shipment": "Jejak penghantaran"
+    },
+    "recover_password": {
+      "title": "Menetapkan semula kata laluan anda",
+      "email": "E-mel",
+      "submit": "Kemukakan",
+      "cancel": "Batalkan",
+      "subtext": "Kami akan menghantar e-mel kepada anda untuk menetapkan semula kata laluan anda.",
+      "success": "Kami telah menghantar e-mel kepada anda dengan pautan untuk mengemas kini kata laluan anda."
+    },
+    "reset_password": {
+      "title": "Tetapkan semula kata laluan akaun",
+      "subtext": "Masukkan kata laluan baharu untuk {{ email }}",
+      "password": "Kata laluan",
+      "password_confirm": "Sahkan Kata Laluan",
+      "submit": "Tetap Semula Kata Laluan"
+    },
+    "register": {
+      "title": "Cipta Akaun",
+      "first_name": "Nama Pertama",
+      "last_name": "Nama Terakhir",
+      "email": "E-mel",
+      "password": "Kata laluan",
+      "submit": "Cipta",
+      "cancel": "Kembali ke Kedai"
+    }
+  },
+  "homepage": {
+    "onboarding": {
+      "product_vendor": "Vendor produk",
+      "modal_title": "Sudah hampir...",
+      "no_products_html": "Anda tidak mempunyai produk dalam koleksi halaman Utama anda. Ruang letak ini akan muncul sehingga anda <a href=\"/admin/collections?query=Frontpage\">menambahkan produk ke koleksi ini</a>.",
+      "add_product": "Tambah Produk",
+      "product_title": "Contoh Tajuk Produk",
+      "blog_title": "Tajuk siaran anda",
+      "blog_excerpt": "Kedai anda belum lagi menerbitkan sebarang siaran blog. Blog boleh digunakan untuk bercakap tentang pelancaran produk baharu, petua, atau berita lain yang anda ingin kongsi dengan pelanggan anda. Anda boleh menyemak blog e-dagang Shopify untuk inspirasi dan nasihat untuk kedai dan blog anda sendiri.",
+      "collection_title": "Contoh Tajuk Koleksi"
+    },
+    "slideshow": {
+      "navigation_instructions": "Gunakan anak panah kiri/kanan untuk menavigasi tayangan slaid atau leret ke kiri/kanan jika menggunakan peranti mudah alih",
+      "next_slide": "Slaid seterusnya",
+      "previous_slide": "Slaid sebelumnya",
+      "play": "Main tayangan slaid",
+      "pause": "Jeda tayangan slaid",
+      "load_slide": "Muatkan slaid {{ slide_number }}",
+      "active_slide": "Slaid {{ slide_number }}, semasa"
+    }
+  },
+  "layout": {
+    "navigation": {
+      "menu": "Menu",
+      "search": "Carian",
+      "action_bar_back": "Kembali ke navigasi laman"
+    },
+    "drawers": {
+      "close_menu": "Tutup menu"
+    },
+    "cart": {
+      "title": "Troli"
+    },
+    "customer": {
+      "account": "Akaun",
+      "log_out": "Log keluar",
+      "log_in": "Log masuk",
+      "create_account": "Cipta akaun"
+    },
+    "footer": {
+      "social_platform": "{{ name }} pada {{ platform }}"
+    }
+  },
+  "products": {
+    "general": {
+      "from_text_html": "<span class=\"txt--emphasis\">dari</span> {{ price }}",
+      "now_price_html": "<span class=\"txt--emphasis\">sekarang</span><span class=\"js-price\">{{ price }}</span>",
+      "sale_price": "Harga jualan",
+      "regular_price": "Harga biasa",
+      "include_taxes": "Termasuk cukai.",
+      "shipping_policy_html": "<a href=\"{{ link }}\">Penghantaran</a> dikira semasa daftar keluar."
+    },
+    "product": {
+      "sold_out": "Habis dijual",
+      "on_sale": "Jualan",
+      "unavailable": "Tidak tersedia",
+      "quantity": "Kuantiti",
+      "add_to_cart": "Tambah ke troli",
+      "back": "Utama",
+      "full_details": "Butiran penuh",
+      "unit_price_label": "Harga seunit"
+    }
+  },
+  "map": {
+    "address_error": "Ralat mencari alamat itu",
+    "address_no_results": "Tiada hasil untuk alamat itu",
+    "address_query_limit_html": "Anda telah melebihi had penggunaan API Google. Pertimbangkan untuk menaik taraf ke <a href=\"https://developers.google.com/maps/premium/usage-limits\">Pelan Premium</a>.",
+    "auth_error_html": "Terdapat masalah mengesahkan Kunci API Google Maps anda."
+  },
+  "gift_cards": {
+    "issued": {
+      "title_html": "Inilah kad hadiah {{ value }} anda untuk {{ shop }}!",
+      "subtext": "Kad hadiah anda",
+      "disabled": "Dinyahdayakan",
+      "expired": "Tamat tempoh pada {{ expiry }}",
+      "active": "Tamat tempoh pada {{ expiry }}",
+      "redeem_html": "Gunakan kod ini di daftar keluar untuk menebus {{ value }} kad hadiah anda",
+      "shop_link": "Mulakan membeli-belah",
+      "print": "Cetak",
+      "remaining_html": "{{ balance }} <small>tinggal</small>",
+      "add_to_apple_wallet": "Tambah ke Apple Wallet"
+    }
+  }
+}

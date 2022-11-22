@@ -1,0 +1,191 @@
+<div id="root" style="position: absolute;left: 0px;top: 0px;width: 100vw;height: 100vh;background-color: black;">
+  {% for block in section.blocks %}
+    {% case block.type %}
+      {% when 'CustomCountdownGraphic' %}
+      {% include 'customcountdowngraphic.text' %}
+    {% endcase %}
+  {% endfor %}
+</div>
+
+<!-- Utils Script Tag -->
+<script>
+//---
+  function SetupCanvases() {
+    let elems = document.getElementsByClassName("textcanvas");
+    for (let canvas of elems) {
+      canvas.width = vw;
+      canvas.height = vh;
+    }
+  }
+//---
+  
+//---
+  let digitalLines = [];
+  function GenerateDigitalLines (keepArray) {
+    //Make canvas
+    let canvas = document.createElement("canvas");
+    canvas.width = vw;
+    canvas.height = vh;
+    let context = canvas.getContext("2d");
+    context.font = "10px 'B612 Mono', monospace";
+    context.textAlign = "center";
+    context.textBaseline = "center"; 
+    //Generate lines
+    if (!keepArray) {
+      digitalLines = [];
+      let measurement = context.measureText("1");
+      let charHeight = measurement.actualBoundingBoxAscent + measurement.actualBoundingBoxDescent;
+      let charsForHeight = Math.ceil(canvas.height / charHeight) + 1;//We +1 because the baseline of text is center
+      let charWidth = measurement.width;
+      let charsForWidth = Math.ceil(canvas.width / charWidth);
+      for (let j = 0;j < charsForHeight;j++) {
+        let line = "";
+        for (let i = 0;i < charsForWidth;i++) {
+          line = line + Math.round(Math.random()).toString();
+        }
+        digitalLines.push(line);
+      }
+    }
+    //Draw lines
+    let measurement2 = context.measureText(digitalLines[0]);
+    let lineHeight = measurement2.actualBoundingBoxAscent + measurement2.actualBoundingBoxDescent;
+    for (let i = 0;i < digitalLines.length;i++) {
+      context.font = "10px 'B612 Mono', monospace";
+      context.fillStyle = "rgb(60,60,0)";
+      context.fillText(digitalLines[i], canvas.width/2, lineHeight*i);
+    }
+    return canvas;
+  }
+//---
+
+//---
+  function GenerateCanvases () {
+    let elems = document.getElementsByClassName("textcanvas");
+    for (let canvas of elems) {
+      let context = canvas.getContext("2d");
+      //Clear
+      context.globalCompositeOperation = 'source-over';
+      context.clearRect(0,0,canvas.width,canvas.height);
+      //Generate cache canvas
+      let canvasB = document.createElement("canvas");
+      canvasB.width = canvas.width;
+      canvasB.height = canvas.height;
+      let contextB = canvasB.getContext("2d");
+      contextB.font = canvas.dataset.textsize + "px 'Orbitron', sans-serif";
+      contextB.textAlign = "center";
+      contextB.textBaseline = "center";
+      contextB.shadowBlur = canvas.dataset.textsize * (canvas.dataset.shadowwidth / 100);
+      contextB.shadowColor = canvas.dataset.shadowcolor;
+      contextB.fillStyle = canvas.dataset.fillcolor;
+      contextB.strokeStyle = canvas.dataset.outlinecolor;
+      contextB.lineWidth = canvas.dataset.outlinewidth;
+      let starterX = canvasB.width * (canvas.dataset.textwidth/100);
+      let starterY = canvasB.height * (canvas.dataset.textheight/100);
+      let deltaY = 0;
+      for (let line of canvas.dataset.textarea.split("\n")) {
+        let measurement = contextB.measureText(line);
+        let height = measurement.actualBoundingBoxAscent + measurement.actualBoundingBoxDescent;
+        //Shadow is already registered to happen here in setup
+        contextB.fillText(line, starterX, starterY + (deltaY + height/2));
+        contextB.strokeText(line, starterX, starterY + (deltaY + height/2));
+        deltaY += height + parseInt(canvas.dataset.textnewlinegap);
+      }
+      context.drawImage(canvasB, 0, 0);
+      //Draw bg nums
+      context.globalCompositeOperation = 'destination-in';
+      context.drawImage(GenerateDigitalLines(true), 0, 0);
+    }
+  }
+//---
+  
+</script>
+
+<!-- Functional Script Tag -->
+<script>
+  window.aaron.common.sizing.resizeFunctions.push(SetupCanvases);
+  window.aaron.common.sizing.resizeFunctions.push(GenerateDigitalLines);
+  window.aaron.common.sizing.resizeFunctions.push(GenerateCanvases);
+  
+  SetupCanvases();
+  GenerateDigitalLines();
+  GenerateCanvases();
+</script>
+
+{% schema %}
+  {
+    "name": "Countdown Settings",
+    "blocks": [
+      {
+        "type": "CustomCountdownGraphic",
+        "name": "Text Block",
+        "settings": [
+          {
+            "type": "textarea",
+            "id": "textarea",
+            "label": "Text"
+          },
+          {
+            "type": "number",
+            "id": "textsize",
+            "label": "Text Font Size",
+            "default": 225
+          },
+          {
+            "type": "number",
+            "id": "textnewlinegap",
+            "label": "Text Newline Gap (Height Spacing Between Lines)",
+            "default": 20
+          },
+          {
+            "type": "number",
+            "id": "textwidth",
+            "label": "Text Page X Percentage",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "textheight",
+            "label": "Text Page Y Percentage",
+            "default": 50
+          },
+          {
+            "type": "color",
+            "id": "fillcolor",
+            "label": "Fill Color",
+            "default": "#43CCFF"
+          },
+          {
+            "type": "color",
+            "id": "outlinecolor",
+            "label": "Outline Color",
+            "default": "#0000FF"
+          },
+          {
+            "type": "number",
+            "id": "outlinewidth",
+            "label": "Outline Width",
+            "default": 5
+          },
+          {
+            "type": "color",
+            "id": "shadowcolor",
+            "label": "Shadow Color",
+            "default": "#0000FF"
+          },
+          {
+            "type": "number",
+            "id": "shadowwidth",
+            "label": "Shadow Width",
+            "default": 14
+          }
+        ]
+      }
+    ]
+  }
+{% endschema %}
+
+{% stylesheet %}
+{% endstylesheet %}
+
+{% javascript %}
+{% endjavascript %}

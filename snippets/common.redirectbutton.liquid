@@ -1,0 +1,138 @@
+<script>
+  (function () {
+    if (typeof window.aaron == "undefined")
+      window.aaron = new Object();
+    if (typeof window.aaron.common == "undefined")
+      window.aaron.common = new Object();
+    if (typeof window.aaron.common.redirectbutton == "undefined")
+      window.aaron.common.redirectbutton = new Object();
+  })();
+
+  if (((deviceType == "pc" || deviceType == "tablet") && '{{ block.settings.pcimg }}' != "")
+      || (deviceType == "phone" && '{{ block.settings.phoneimg }}' != "")) {
+    //Hoist funcs
+    let Startup,AddElems,Activate,Resize;
+    //Hoist vars
+    let div,a,img,svg;
+
+    Startup = function () {
+      //No Startup
+    };
+    AddElems = function () {
+      div = document.createElement("div");
+      div.classList.add("redirectbutton");
+      div.style.position = "absolute";
+      div.style.margin = "0px";
+      div.style.transform = "translate(-50%,-50%)";
+      div.style.zIndex = {{ block.settings.zindex }};
+      div.style.visibility = "hidden";
+      div.ondragstart = ()=>{return false;};
+      div.dataset.anchor='{{ block.settings.anchor }}';
+      div.dataset.pcsizingmode='{{ block.settings.pcsizingmode }}';
+      div.dataset.pcsizewidth='{{ block.settings.pcsizewidth }}';
+      div.dataset.pcsizeheight='{{ block.settings.pcsizeheight }}';
+      div.dataset.pcx='{{ block.settings.pcx }}';
+      div.dataset.pcy='{{ block.settings.pcy }}';
+      div.dataset.phonesizingmode='{{ block.settings.phonesizingmode }}';
+      div.dataset.phonesizewidth='{{ block.settings.phonesizewidth }}';
+      div.dataset.phonesizeheight='{{ block.settings.phonesizeheight }}';
+      div.dataset.phonex='{{ block.settings.phonex }}';
+      div.dataset.phoney='{{ block.settings.phoney }}';
+  
+      a = document.createElement("a");
+      let redirectUrl = '{{ block.settings.redirecturloverride }}'.length > 0 ? '{{ block.settings.redirecturloverride }}' : '{{ block.settings.redirecturl }}';
+      a.href = redirectUrl;
+  
+      img = document.createElement("img");
+      img.id = '{{ block.settings.id }}';
+      img.style.width = "100%";
+      img.style.height = "100%";
+      img.style.position = "absolute";
+      img.style.left = "0px";
+      img.style.top = "0px";
+      if (deviceType == "pc" || deviceType == "tablet")
+        img.src = '{% liquid
+                   case block.settings.pcapproxsize
+                     when "64"
+                       echo block.settings.pcimg | image_url: width: 64
+                     when "128"
+                       echo block.settings.pcimg | image_url: width: 128
+                     when "256"
+                       echo block.settings.pcimg | image_url: width: 256
+                     when "512"
+                       echo block.settings.pcimg | image_url: width: 512
+                     when "1024"
+                       echo block.settings.pcimg | image_url: width: 1024
+                     when "2048"
+                       echo block.settings.pcimg | image_url: width: 2048
+                     when "4096"
+                       echo block.settings.pcimg | image_url: width: 4096
+                   endcase %}';
+      else if (deviceType == "phone")
+        img.src = '{% liquid
+                   case block.settings.phoneapproxsize
+                     when "64"
+                       echo block.settings.phoneimg | image_url: width: 64
+                     when "128"
+                       echo block.settings.phoneimg | image_url: width: 128
+                     when "256"
+                       echo block.settings.phoneimg | image_url: width: 256
+                     when "512"
+                       echo block.settings.phoneimg | image_url: width: 512
+                     when "1024"
+                       echo block.settings.phoneimg | image_url: width: 1024
+                     when "2048"
+                       echo block.settings.phoneimg | image_url: width: 2048
+                     when "4096"
+                       echo block.settings.phoneimg | image_url: width: 4096
+                   endcase %}';
+  
+      let asset;
+      if (deviceType == "pc" || deviceType == "tablet") {
+        asset = '{{ block.settings.pcclickableimg }}';
+      } else if (deviceType == "phone") {
+        asset = '{{ block.settings.phoneclickableimg }}';
+      }
+      if (typeof asset != "undefined" && asset != "") {
+        let dummy = document.createElement("div");
+        dummy.insertAdjacentHTML('beforeend', asset);
+        svg = dummy.getElementsByTagName("svg")[0];
+        svg.style.width = "100%";
+        svg.style.height = "100%";
+        svg.style.position = "absolute";
+        svg.style.left = "0px";
+        svg.style.top = "0px";
+        svg.style.opacity = 0;
+        svg.innerHTML = "<a href='" + redirectUrl + "'>" + svg.innerHTML + "</a>";
+      }
+  
+      let root = document.getElementById("root");
+      if (typeof asset != "undefined" && asset != "") {
+        div.appendChild(img);
+        div.appendChild(svg);
+        root.appendChild(div);
+      } else {
+        a.appendChild(img);
+        div.appendChild(a);
+        root.appendChild(div);
+      }
+  
+      img.onload = Resize;
+    };
+    Activate = function () {
+      //No Activate
+    };
+    Resize = function () {
+      window.aaron.common.sizing.DefaultSetSize(div, img, true);
+      if (window.aaron && window.aaron.common && window.aaron.common.resizetextarea && window.aaron.common.resizetextarea.pendingTextareas && window.aaron.common.resizetextarea.pendingTextareas[img.id]) {
+        let imgMeasurement = img.getBoundingClientRect();
+        for (let f of window.aaron.common.resizetextarea.pendingTextareas[img.id])
+          f(imgMeasurement.left, imgMeasurement.top);
+      }
+    };
+    // window.aaron.common.modulebasics.StartupFuncs.push(Startup);
+    window.aaron.common.modulebasics.AddElemsFuncs.push(AddElems);
+    // window.aaron.common.modulebasics.ActivateFuncs.push(Activate);
+    window.aaron.common.modulebasics.ResizeFuncs.push(Resize);
+  }
+</script>

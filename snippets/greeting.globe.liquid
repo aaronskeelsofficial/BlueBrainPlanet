@@ -1,0 +1,449 @@
+<script>
+  (function () {
+    if (typeof window.aaron == "undefined")
+      window.aaron = new Object();
+    if (typeof window.aaron.greeting == "undefined")
+      window.aaron.greeting = new Object();
+    if (typeof window.aaron.greeting.globe == "undefined")
+      window.aaron.greeting.globe = new Object();
+    if (typeof window.aaron.greeting.globe.activateFunctions == "undefined")
+      window.aaron.greeting.globe.activateFunctions = []; //These contain code adding eventListeners
+    window.aaron.greeting.globe.elementsGeneratedFlag = false;
+    window.aaron.greeting.globe.products = [];
+    window.aaron.greeting.globe.variants = [];
+  })();
+
+  if (deviceType == "pc" || deviceType == "tablet") {
+    (function () {
+      //Load products into js from shopify's dumbass liquid
+        let curVariantID = -1; //Define here so isn't redefined in Liquid loop.
+        {% paginate block.settings.collections by 50 %}
+          {% for collection in block.settings.collections %}
+            {% paginate collection.products by 50 %}
+              {% for product in collection.products %}
+                window.aaron.greeting.globe.products.push({{ product | json }});
+                {% for variant in product.variants %}
+                  curVariantID = '{{ variant.id }}';
+                  for (let varInd = 0; varInd < window.aaron.greeting.globe.products[window.aaron.greeting.globe.products.length-1].variants.length; varInd++) {
+                    let checkVariant = window.aaron.greeting.globe.products[window.aaron.greeting.globe.products.length-1].variants[varInd];
+                    if (checkVariant.id == curVariantID) {
+                      window.aaron.greeting.globe.products[window.aaron.greeting.globe.products.length-1].variants[varInd].inventory_quantity = {{ variant.inventory_quantity }};
+                    }
+                  }
+                {% endfor %}
+              {% endfor %}
+            {% endpaginate %}
+          {% endfor %}
+        {% endpaginate %}
+
+      //Handle adding single or all variants
+      {% if block.settings.showallcolorvariants %}
+        for (let product of window.aaron.greeting.globe.products) {
+          let colorsFoundArray = [];
+          let colorOptionIndex = -1;
+          for (let i = 0;i < product.options.length;i++) {
+            if (product.options[i].toLowerCase().includes("color")) {
+              colorOptionIndex = i;
+              i = product.options.length;
+            }
+          }
+          for (let variant of product.variants) {
+            if (!colorsFoundArray.includes(variant.options[colorOptionIndex])) {
+              variant.parentProduct = product;
+              window.aaron.greeting.globe.variants.push(variant);
+              colorsFoundArray.push(variant.options[colorOptionIndex]);
+            }
+          }
+        }
+      {% endif %}
+    })();
+    
+    window.aaron.greeting.globe.globe = class {
+        calculateRadius() {
+          let elem = this.ringimg;
+          let diameter;
+          if (deviceType == "pc" || deviceType == "tablet") {
+            let widthPercentSetting = elem.dataset.pcsizewidth/100;
+            let heightPercentSetting = elem.dataset.pcsizeheight/100;
+            switch (elem.dataset.pcsizingmode) {
+              case "widthAutoHeight":
+                diameter = vw * widthPercentSetting;
+                break;
+              case "heightAutoWidth":
+                diameter = vh * heightPercentSetting;
+                break;
+            }
+            this.radius = diameter/2;
+          } else {
+            //Not active for phones
+          }
+        }
+      
+        checkForRotation(){
+            let maxSpeed = -Math.PI / 180.0 * 2;
+            function handleRotation(c1, c2, r12){ //Coordinate 1, Coordinate 2, Rotation 1-2
+                return [c1*Math.cos(r12)-c2*Math.sin(r12), c1*Math.sin(r12)+c2*Math.cos(r12)];
+            }
+  
+            var xFromCenter = this.lastCursorX - (this.centerX);
+            var yFromCenter = this.lastCursorY - (this.centerY);
+            xFromCenter = -xFromCenter; //Fix to make items rotate TOWARD cursor rather than away
+            yFromCenter = -yFromCenter;//Fix to make items rotate TOWARD cursor rather than away
+            var distance = Math.sqrt(Math.pow(xFromCenter, 2) + Math.pow(yFromCenter, 2));
+            var distanceScaler = 1 / this.radius;
+            var deltaXFactor = - Math.PI / 180 / 100;
+            var deltaYFactor = - Math.PI / 180 / 100;
+            if(!this.decelerate && distance <= this.radius) {
+                this.vXY += deltaXFactor;
+                this.vXZ += deltaYFactor;
+                this.vXY = this.vXY < maxSpeed ? maxSpeed : this.vXY;
+                this.vXZ = this.vXZ < maxSpeed ? maxSpeed : this.vXZ;
+                this.vXY = this.vXY > -maxSpeed ? -maxSpeed : this.vXY;
+                this.vXZ = this.vXZ > -maxSpeed ? -maxSpeed : this.vXZ;
+            }else if(this.autopilot){
+                xFromCenter = this.radius;
+                yFromCenter = this.radius;
+            }else{
+                this.vXY -= deltaXFactor;
+                this.vXZ -= deltaYFactor;
+                this.vXY = this.vXY > 0 ? 0 : this.vXY;
+                this.vXZ = this.vXZ > 0 ? 0 : this.vXZ;
+                if(this.decelerate && this.vXY == 0 && this.vXZ == 0)
+                    clearInterval(this.interval);
+            }
+  
+            var xAngleChange = (xFromCenter * distanceScaler) * this.vXY;
+            var yAngleChange = (yFromCenter * distanceScaler) * this.vXZ;
+            for(var i = 0;i < this.globeWordArray.length;i++){
+                var curGlobeWord = this.globeWordArray[i];
+  
+                curGlobeWord.rXY = - xAngleChange;
+                curGlobeWord.rXZ = - yAngleChange;
+                [curGlobeWord.x,curGlobeWord.y] = handleRotation(curGlobeWord.x,curGlobeWord.y,curGlobeWord.rXY);
+                [curGlobeWord.x,curGlobeWord.z] = handleRotation(curGlobeWord.x,curGlobeWord.z,curGlobeWord.rXZ);
+                [curGlobeWord.y,curGlobeWord.z] = handleRotation(curGlobeWord.y,curGlobeWord.z,curGlobeWord.rYZ);
+  
+                curGlobeWord.updateLocation(this.rotateText, curGlobeWord.useImageInsteadLink);
+            }
+        }
+  
+        constructor(divElement, vXY, vXZ, vYZ, rotateText) {
+          //Ensure divElement is already loaded up with data attributes for sizing/anchor/etc
+          let temp = this;
+          this.vXY = vXY;
+          this.vXZ = vXZ;
+          this.vYZ = vYZ;
+          this.globeWordArray = [];
+          this.divElement = divElement;
+          this.rotateText = rotateText;
+          this.centerX = 0;
+          this.centerY = 0;
+          
+          let ringimg = document.createElement("img");
+          // ringimg.src = '{% liquid
+                 case block.settings.pcringapproxsize
+                   when "64"
+                     echo block.settings.pcringimg | image_url: width: 64
+                   when "128"
+                     echo block.settings.pcringimg | image_url: width: 128
+                   when "256"
+                     echo block.settings.pcringimg | image_url: width: 256
+                   when "512"
+                     echo block.settings.pcringimg | image_url: width: 512
+                   when "1024"
+                     echo block.settings.pcringimg | image_url: width: 1024
+                   when "2048"
+                     echo block.settings.pcringimg | image_url: width: 2048
+                   when "4096"
+                     echo block.settings.pcringimg | image_url: width: 4096
+                 endcase %}';
+          ringimg.style.position = "absolute";
+          ringimg.style.transform = "translate(-50%,-50%)";
+          ringimg.style.zIndex = {{ block.settings.zindex }};
+          // ringimg.style.visibility = "hidden";
+          ringimg.dataset.anchor='{{ block.settings.anchor }}';
+          ringimg.dataset.pcsizingmode='{{ block.settings.pcsizingmode }}';
+          ringimg.dataset.pcsizewidth='{{ block.settings.pcsizewidth }}';
+          ringimg.dataset.pcsizeheight='{{ block.settings.pcsizeheight }}';
+          ringimg.dataset.pcx='{{ block.settings.pcx }}';
+          ringimg.dataset.pcy='{{ block.settings.pcy }}';
+          this.ringimg = ringimg;
+          this.divElement.appendChild(this.ringimg);
+          this.calculateRadius();
+          function resizeImage () {
+            // window.aaron.common.sizing.DefaultSetSize(ringimg, ringimg, true);
+            window.aaron.common.sizing.DefaultSetSize(ringimg, ringimg, false);
+            divElement.style.visibility = "visible";
+            temp.calculateRadius();
+            temp.centerX = ringimg.getBoundingClientRect().left + ringimg.getBoundingClientRect().width/2;
+            temp.centerY = ringimg.getBoundingClientRect().top + ringimg.getBoundingClientRect().height/2;
+            temp.checkForRotation();
+          }
+          ringimg.onload = resizeImage;
+          window.aaron.common.sizing.resizeFunctions.push(resizeImage);
+  
+          /*
+          * We initialize like this specifically so the globe can spin automatically upon creation.
+          * Then once a user hovers their mouse over it, it will become manually driven.
+          * Until that happens though, this initialization setup allows it to spin automatically at full power in
+          * the x or y direction depending on the globe constructor.
+          */
+            this.decelerate = false;
+            this.lastCursorX = 0;
+            this.lastCursorY = 0;
+            this.autopilot = true;
+          /**/
+  
+          //Handle activate function stuff
+          function activateFunction () {
+            ringimg.src = '{% liquid
+                 case block.settings.pcringapproxsize
+                   when "64"
+                     echo block.settings.pcringimg | image_url: width: 64
+                   when "128"
+                     echo block.settings.pcringimg | image_url: width: 128
+                   when "256"
+                     echo block.settings.pcringimg | image_url: width: 256
+                   when "512"
+                     echo block.settings.pcringimg | image_url: width: 512
+                   when "1024"
+                     echo block.settings.pcringimg | image_url: width: 1024
+                   when "2048"
+                     echo block.settings.pcringimg | image_url: width: 2048
+                   when "4096"
+                     echo block.settings.pcringimg | image_url: width: 4096
+                 endcase %}';
+            if (temp.vXY != 0 || temp.vXZ != 0 || temp.vYZ != 0)
+              temp.interval = setInterval(function(){temp.checkForRotation();},10);
+            
+            divElement.onmousemove = function(event){
+              temp.lastCursorX = event.clientX;
+              temp.lastCursorY = event.clientY;
+            }
+            divElement.onmouseenter = function(event){
+                if(temp.interval != null)
+                    clearInterval(temp.interval);
+                temp.interval = setInterval(function(){temp.checkForRotation();},10);
+                temp.decelerate = false;
+                temp.autopilot = false;
+            }
+            divElement.onmouseleave = function(event){
+                temp.decelerate = true;
+            }
+          };
+          window.aaron.greeting.globe.activateFunctions.push(activateFunction);
+        }
+    };
+    
+    window.aaron.greeting.globe.globeWord = class {
+        constructor(id, text, phi_deg, theta_deg, rXY, rXZ, rYZ, globe, useImageInsteadLink, href){
+          let phi = phi_deg * Math.PI / 180;
+          let theta = theta_deg * Math.PI / 180;
+          this.id = id;
+          this.x = globe.radius * Math.sin(phi) * Math.cos(theta);
+          this.y = globe.radius * Math.sin(phi) * Math.sin(theta)
+          this.z = globe.radius * Math.cos(phi);
+          this.rXY = rXY;
+          this.rXZ = rXZ;
+          this.rYZ = rYZ;
+          this.globe = globe;
+          this.useImageInsteadLink = useImageInsteadLink;
+          this.href = href;
+  
+          if (useImageInsteadLink) {
+            let backplate = document.createElement("img");
+            backplate.src = '{% liquid
+                 case block.settings.pcbackplateapproxsize
+                   when "64"
+                     echo block.settings.pcbackplateimg | image_url: width: 64
+                   when "128"
+                     echo block.settings.pcbackplateimg | image_url: width: 128
+                   when "256"
+                     echo block.settings.pcbackplateimg | image_url: width: 256
+                   when "512"
+                     echo block.settings.pcbackplateimg | image_url: width: 512
+                   when "1024"
+                     echo block.settings.pcbackplateimg | image_url: width: 1024
+                   when "2048"
+                     echo block.settings.pcbackplateimg | image_url: width: 2048
+                   when "4096"
+                     echo block.settings.pcbackplateimg | image_url: width: 4096
+                 endcase %}';
+            let tempWidthCalc = vw * {{ block.settings.pcbackplatewidth }}/100;
+            backplate.style.width = tempWidthCalc + "px";
+            backplate.style.position = "absolute";
+            backplate.style.transform = "translate(-50%,-50%)";
+            backplate.style.zIndex = {{ block.settings.zindex }};
+  
+            let a = document.createElement("a");
+            a.href = href;
+            
+            let product = document.createElement("img");
+            product.src = useImageInsteadLink;
+            tempWidthCalc = vw * {{ block.settings.pcproductwidth }}/100;
+            product.style.width = tempWidthCalc + "px";
+            product.style.position = "absolute";
+            product.style.transform = "translate(-50%,-50%)";
+            product.style.zIndex = {{ block.settings.zindex }};
+            
+            this.elem = backplate;
+            this.elem2 = product;
+            this.globe.divElement.appendChild(this.elem);
+            a.appendChild(this.elem2);
+            this.globe.divElement.appendChild(a);
+          } else {
+            //Implement text here
+          }
+        
+          this.globe.globeWordArray.push(this);
+          this.updateLocation(this.globe.rotateText, this.useImageInsteadLink);
+        }
+  
+        getPageX(){
+          return parseInt(this.globe.centerX + this.y); //This is relative to the top left corner of the div
+        }
+        getPageY(){
+          return parseInt(this.globe.centerY + this.z);
+        }
+  
+        updateLocation(rotateText, useImageInsteadLink){
+          let element = this.elem;
+          let element2 = this.elem2;
+  
+          let pageX = this.getPageX();
+          let pageY = this.getPageY();
+          element.style.left = pageX + "px";
+          element.style.top = pageY + "px";
+          let tempWidthCalc = vw * {{ block.settings.pcbackplatewidth }}/100;
+          element.style.width = tempWidthCalc + "px";
+          element2.style.left = pageX + "px";
+          element2.style.top = pageY + "px";
+          tempWidthCalc = vw * {{ block.settings.pcproductwidth }}/100;
+          element2.style.width = tempWidthCalc + "px";
+          if(rotateText){
+            var scaleX = this.y / this.globe.radius; //This gives -1 -> 1
+            scaleX *= Math.PI / 2; //This gives -PI/2 -> PI/2
+            scaleX = Math.cos(scaleX);
+            scaleX *= this.x < 0 ? -1 : 1;
+            var scaleY = Math.abs(this.z / this.globe.radius); //This gives 1 -> 0 -> 1
+            scaleY = 1 - scaleY; //This gives 0 -> 1 -> 0
+            scaleY /= 2; //This gives 0 -> .5 -> 0
+            scaleY += .5; //This gives .5 -> 1 -> .5
+            element.style.transform = "translate(-50%,-50%) scale(" + scaleX + "," + scaleY + ")";
+            element2.style.transform = "translate(-50%,-50%) scale(" + scaleX + "," + scaleY + ")";
+          }else{
+            let ratioBackwards = this.x / this.globe.radius; //-1 -> 0 -> 1
+            let scale = 1;
+            let opacity = 1;
+            let zIndex = 5;
+            if(ratioBackwards >= 0){
+              //Do nothing
+            }else{
+              ratioBackwards += 1; //From 1 -> 0 from straight down to back end
+              scale = .5 + .5*ratioBackwards;
+              opacity = .2 + .8*ratioBackwards;
+              zIndex = 4;
+            }
+            element.style.transform = "translate(-50%,-50%) scale(" + scale + "," + scale + ")";
+            element.style.opacity = opacity;
+            element.style.zIndex = zIndex;
+            element2.style.transform = "translate(-50%,-50%) scale(" + scale + "," + scale + ")";
+            element2.style.opacity = opacity;
+            element2.style.zIndex = zIndex;
+          }
+        }
+    };
+  
+    window.aaron.greeting.globe.GetLayout = function (numOfElems) {
+      let pos = [];
+      if (numOfElems == 1) {
+        pos.push([90, 0]);
+      } else if (numOfElems == 2) {
+        // pos.push([90, 90]);
+        // pos.push([90, -90]);
+        pos.push([0,0]);
+        pos.push([180,0]);
+      } else if (numOfElems == 3) {
+        pos.push([60, 90]);
+        pos.push([60, -90]);
+        pos.push([180, 0]);
+      } else if (numOfElems == 4) {
+        pos.push([72*1, -90]);
+        pos.push([72*2, -90])
+        pos.push([72*1, 90])
+        pos.push([72*2, 90])
+      } else if (numOfElems == 5) {
+        pos.push([0,0]);
+        pos.push([180,0]);
+        pos.push([90,0]);
+        pos.push([90,120]);
+        pos.push([90,240]);
+      } else if (numOfElems == 6) {
+        pos.push([60,0]);
+        pos.push([60,120]);
+        pos.push([60,-120]);
+        pos.push([120,0]);
+        pos.push([120,120]);
+        pos.push([120,-120]);
+      } else if (numOfElems == 7) {
+        pos.push([0,0]);
+        pos.push([60,90]);
+        pos.push([60,270]);
+        pos.push([120,0]);
+        pos.push([120,120]);
+        pos.push([120,240]);
+        pos.push([180,0]);
+      } else if (numOfElems == 8) {
+        pos.push([0,0]);
+        pos.push([60,0]);
+        pos.push([60,120]);
+        pos.push([60,240]);
+        pos.push([120,0]);
+        pos.push([120,120]);
+        pos.push([120,240]);
+        pos.push([180,0]);
+      }
+      return pos;
+    };
+    
+    (function () {
+      if (!window.aaron.greeting.globe.elementsGeneratedFlag) { 
+        window.aaron.greeting.globe.elementsGeneratedFlag = true;
+        //Create big papa div
+        let root = document.getElementById("root");
+        let div = document.createElement("div");
+        div.classList.add("globediv");
+        div.style.visibility = "hidden";
+        root.appendChild(div);
+    
+        //Create globe
+        let useVariants = window.aaron.greeting.globe.variants.length == 0 ? false : true;
+        let pos = !useVariants ? window.aaron.greeting.globe.GetLayout(window.aaron.greeting.globe.products.length) : window.aaron.greeting.globe.GetLayout(window.aaron.greeting.globe.variants.length);
+        // let pos = window.aaron.greeting.globe.GetLayout(6);
+        var globe1 = new window.aaron.greeting.globe.globe(div, .01, .01, 0, false);
+        let arrayToUse = !useVariants ? window.aaron.greeting.globe.products : window.aaron.greeting.globe.variants;
+        for (let i = 0;i < arrayToUse.length;i++) {
+          let product = !useVariants ? arrayToUse[i] : arrayToUse[i].parentProduct;
+          let variant = !useVariants ? null : arrayToUse[i];
+          if (!useVariants)
+            new window.aaron.greeting.globe.globeWord('globe_' + product.title.replaceAll(" ","_"), product.title, pos[i][0], pos[i][1], 0, 0, 0, globe1, product.images[1], "/products/" + product.handle + "?variant=" + product.variants[0].id);
+          else
+            new window.aaron.greeting.globe.globeWord('globe_' + product.title.replaceAll(" ","_"), product.title, pos[i][0], pos[i][1], 0, 0, 0, globe1, variant.featured_image.src, "/products/" + product.handle + "?variant=" + variant.id);
+        }
+        // for (let i = 0;i < window.aaron.greeting.globe.products.length;i++) {
+        //   let product = window.aaron.greeting.globe.products[i];
+        //   new window.aaron.greeting.globe.globeWord('globe2_' + product.title.replaceAll(" ","_"), product.title, pos[i+2][0], pos[i+2][1], 0, 0, 0, globe1, product.images[0], "/products/" + product.handle + "?variant=" + product.variants[0].id);
+        // }
+        // for (let i = 0;i < window.aaron.greeting.globe.products.length;i++) {
+        //   let product = window.aaron.greeting.globe.products[i];
+        //   new window.aaron.greeting.globe.globeWord('globe3_' + product.title.replaceAll(" ","_"), product.title, pos[i+4][0], pos[i+4][1], 0, 0, 0, globe1, product.images[0], "/products/" + product.handle + "?variant=" + product.variants[0].id);
+        // }
+      }
+    })();
+  }
+
+  else if (deviceType == "phone") {
+    //Do nothing
+  }
+  
+</script>

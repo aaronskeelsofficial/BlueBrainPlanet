@@ -1,0 +1,860 @@
+<div id="root" style="position: absolute;left: 0px;top: 0px;width: 100vw;height: 100vh;background-color: black;">
+  {% for block in section.blocks %}
+    {% case block.type %}
+      {% when 'RedirectButton' %}
+        {% include 'common.redirectbutton' %}
+      {% when 'Image' %}
+        {% include 'common.image' %}
+      {% when 'ResizeTextarea' %}
+        {% include 'common.resizetextarea' %}
+    {% endcase %}
+    <canvas id="timercanvas" style="position: absolute; left: 0px; top: 0px;margin: 0px;"></canvas>
+  {% endfor %}
+  f
+</div>
+
+<script>
+  let fontSize = 225;
+
+  //---
+  let digitalLines = [];
+  function updateDigitalLines (refCanvas) {
+    //Make canvas
+    let canvas = document.createElement("canvas");
+    canvas.width = refCanvas.width;
+    canvas.height = refCanvas.height;
+    let context = canvas.getContext("2d");
+    context.font = "10px 'B612 Mono', monospace";
+    context.textAlign = "center";
+    context.textBaseline = "center";
+    
+    //Generate lines
+    if (digitalLines.length == 0) {
+      let measurement = context.measureText("1");
+      let charHeight = measurement.actualBoundingBoxAscent + measurement.actualBoundingBoxDescent;
+      let charsForHeight = Math.ceil(canvas.height / charHeight) + 1;//We +1 because the baseline of text is center
+      let charWidth = measurement.width;
+      let charsForWidth = Math.ceil(canvas.width / charWidth);
+      for (let j = 0;j < charsForHeight;j++) {
+        let line = "";
+        for (let i = 0;i < charsForWidth;i++) {
+          line = line + Math.round(Math.random()).toString();
+        }
+        digitalLines.push(line);
+      }
+    } else {
+      for (let i = 0;i < digitalLines.length;i++) {
+        let line = digitalLines[i];
+        for (let index = 0;index < line.length;index++) {
+          let char = line.charAt(index);
+          let activation = Math.random();
+          if (activation < .06) {
+            line = line.substring(0, index) + (char != '0' ? '0' : '1') + line.substring(index + 1);
+            digitalLines[i] = line;
+          }
+        }
+      }
+    }
+
+    //Draw lines
+    let measurement = context.measureText(digitalLines[0]);
+    let lineHeight = measurement.actualBoundingBoxAscent + measurement.actualBoundingBoxDescent;
+    
+    for (let i = 0;i < digitalLines.length;i++) {
+      // context.fillStyle = "rgb(25, 25, 25)";
+      context.fillStyle = "rgb(0,0,0)";
+      context.fillText(digitalLines[i], canvas.width/2, lineHeight*i);
+    }
+    
+    return canvas;
+  }
+  //---
+
+  let dateString = null;
+  function updateClock (refCanvas) {
+    //Make canvas
+    let canvas = document.createElement("canvas");
+    canvas.width = vw;
+    canvas.height = vh;
+    let context = canvas.getContext("2d");
+    if (deviceType != "phone") {
+      context.font = '{{ section.settings.clockfontsizepc }}' + "px 'Orbitron', sans-serif";
+    } else {
+      context.font = '{{ section.settings.clockfontsizephone }}' + "px 'Orbitron', sans-serif";
+    }
+    context.textAlign = "center";
+    context.textBaseline = 'middle';
+
+    //Time stuff
+    let currentTime = new Date();
+    let targetS = targetTime.getTime();
+    let currentS = currentTime.getTime();
+    let delta = targetS - currentS;
+    let deltaH = Math.floor(delta / (60*60*1000));
+    delta -= deltaH * (60*60*1000);
+    let deltaM = Math.floor(delta / (60*1000));
+    delta -= deltaM * (60*1000);
+    let deltaS = Math.floor(delta / (1000));
+    let h = deltaH.toString().padStart(2, '0');
+    let m = deltaM.toString().padStart(2, '0');
+    let s = deltaS.toString().padStart(2, '0');
+
+    //Draw time
+    if (deviceType != "phone") {
+      let tempWidthCalc = {{ section.settings.clockshadowwidth }} / 100;
+      context.shadowBlur = fontSize * tempWidthCalc;
+      context.shadowColor = '{{ section.settings.clockshadowcolor }}';
+    }
+    context.fillStyle = '{{ section.settings.clockfillcolor }}';
+    let textToType = "";
+    if (({{ section.settings.showdateovernn }} == true && h > 99) || ({{ section.settings.showdateoverride }} == true)) {
+      if (dateString == null) {
+        dateString = targetTime.toLocaleString('en-us', {year: '2-digit', month: '2-digit', day: '2-digit'});
+      }
+      textToType = dateString;
+    } else {
+      textToType = h + ":" + m + ":" + s;
+    }
+    context.fillText(textToType, canvas.width * .5, canvas.height * .50);
+    if (deviceType != "phone") {
+      context.strokeStyle = '{{ section.settings.clockoutlinecolor }}';
+      context.lineWidth = {{ section.settings.clockoutlinewidth }};
+      context.strokeText(textToType, canvas.width * .5, canvas.height * .50);
+    }
+
+    return canvas;
+  }
+  
+  //---
+  let targetTime = new Date('{{ section.settings.dropdatetext }}');
+  function updateCanvasTimer () {
+    let root = document.getElementById("root");
+    let canvas = document.getElementById("timercanvas");
+    canvas.width = vw;
+    canvas.style.width = vw + "px";
+    canvas.height = vh;
+    canvas.style.height = vh + "px";
+    let context = canvas.getContext("2d");
+    context.globalCompositeOperation = 'source-over';
+    context.clearRect(0,0,canvas.width,canvas.height);
+
+    if (deviceType != "phone") {
+      context.drawImage(updateDigitalLines(canvas), 0, 0);
+      context.globalCompositeOperation = 'source-atop';
+    }
+    context.drawImage(updateClock(canvas), 0, 0);
+    canvas.style.backgroundColor = "black";
+  }
+  //---
+  updateCanvasTimer();
+  document.body.onload = function () {
+    if (deviceType == "pc" || deviceType == "tablet") {
+      document.body.onmousemove = function () {
+        document.body.onmousemove = null;
+        window.setInterval(updateCanvasTimer, 175);
+      };
+    } else if (deviceType == "phone") {
+      window.setTimeout(()=>{
+        window.setInterval(updateCanvasTimer, 175);
+      },1);
+    }
+  }
+</script>
+
+{% schema %}
+  {
+    "name": "Countdown Settings",
+    "settings": [
+      {
+        "type": "text",
+        "id": "dropdatetext",
+        "label": "Drop Date (MM:DD:YYYY HH:MM:SS UTC)",
+        "default": "09/26/2022 18:00:00 UTC"
+      },
+      {
+        "type": "color",
+        "id": "clockfillcolor",
+        "label": "Clock Fill Color",
+        "default": "#43CCFF"
+      },
+      {
+        "type": "color",
+        "id": "clockoutlinecolor",
+        "label": "Clock Outline Color",
+        "default": "#0000FF"
+      },
+      {
+        "type": "number",
+        "id": "clockoutlinewidth",
+        "label": "Clock Outline Width",
+        "default": 5
+      },
+      {
+        "type": "color",
+        "id": "clockshadowcolor",
+        "label": "Clock Shadow Color",
+        "default": "#0000FF"
+      },
+      {
+        "type": "number",
+        "id": "clockshadowwidth",
+        "label": "Clock Shadow Width Percentage",
+        "default": 14
+      },
+      {
+        "type": "number",
+        "id": "clockfontsizepc",
+        "label": "Clock Font Size (PC)",
+        "default": 225
+      },
+      {
+        "type": "number",
+        "id": "clockfontsizephone",
+        "label": "Clock Font Size (Phone)",
+        "default": 40
+      },
+      {
+        "type": "checkbox",
+        "id": "showdateovernn",
+        "label": "Show Date if Hour > 99",
+        "default": true
+      },
+      {
+        "type": "checkbox",
+        "id": "showdateoverride",
+        "label": "Show Date ALWAYS (Override Clock)",
+        "default": false
+      }
+    ],
+    "blocks": [
+      {
+        "type": "RedirectButton",
+        "name": "Redirect Button",
+        "settings": [
+          {
+            "type": "url",
+            "id": "redirecturl",
+            "label": "Redirect URL"
+          },
+          {
+            "type": "text",
+            "id": "redirecturloverride",
+            "label": "Redirect URL Override (Optional)"
+          },
+          {
+            "type": "number",
+            "id": "zindex",
+            "label": "Image Visual Layer",
+            "default": 1
+          },
+          {
+            "type": "select",
+            "id": "anchor",
+            "label": "Image Anchor Point",
+            "options": [
+              {
+                "value": "topleft",
+                "label": "Top Left"
+              },
+              {
+                "value": "topmiddle",
+                "label": "Top Middle"
+              },
+              {
+                "value": "topright",
+                "label": "Top Right"
+              },
+              {
+                "value": "middleleft",
+                "label": "Middle Left"
+              },
+              {
+                "value": "middle",
+                "label": "Middle"
+              },
+              {
+                "value": "middleright",
+                "label": "Middle Right"
+              },
+              {
+                "value": "bottomleft",
+                "label": "Bottom Left"
+              },
+              {
+                "value": "bottommiddle",
+                "label": "Bottom Middle"
+              },
+              {
+                "value": "bottomright",
+                "label": "Bottom Right"
+              }
+            ],
+            "default": "middle"
+          },
+          {
+            "type": "image_picker",
+            "id": "pcimg",
+            "label": "Image (PC)"
+          },
+          {
+            "type": "select",
+            "id": "pcapproxsize",
+            "label": "Image Approximate Size (PC)",
+            "options": [
+              {
+                "value": "64",
+                "label": "~64 Pixels"
+              },
+              {
+                "value": "128",
+                "label": "~128 Pixels"
+              },
+              {
+                "value": "256",
+                "label": "~256 Pixels"
+              },
+              {
+                "value": "512",
+                "label": "~512 Pixels"
+              },
+              {
+                "value": "1024",
+                "label": "~1024 Pixels"
+              },
+              {
+                "value": "2048",
+                "label": "~2048 Pixels"
+              },
+              {
+                "value": "4096",
+                "label": "~4096 Pixels"
+              }
+            ],
+            "default": "2048"
+          },
+          {
+            "type": "text",
+            "id": "pcclickableimg",
+            "label": "Image Clickability SVG Code (PC)"
+          },
+          {
+            "type": "select",
+            "id": "pcsizingmode",
+            "label": "Image Sizing Mode (PC)",
+            "options": [
+              {
+                "value": "widthAutoHeight",
+                "label": "Define Width - Keep Ratio Height"
+              },
+              {
+                "value": "heightAutoWidth",
+                "label": "Define Height - Keep Ratio Width"
+              },
+              {
+                "value": "explicit",
+                "label": "Define Height & Width"
+              }
+            ],
+            "default": "widthAutoHeight"
+          },
+          {
+            "type": "number",
+            "id": "pcsizewidth",
+            "label": "Image Width Size % (PC)",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "pcsizeheight",
+            "label": "Image Height Size % (PC)",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "pcx",
+            "label": "Image X Percentage (PC)",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "pcy",
+            "label": "Image Y Percentage (PC)",
+            "default": 50
+          },
+          {
+            "type": "image_picker",
+            "id": "phoneimg",
+            "label": "Image (Phone)"
+          },
+          {
+            "type": "select",
+            "id": "phoneapproxsize",
+            "label": "Image Approximate Size (Phone)",
+            "options": [
+              {
+                "value": "64",
+                "label": "~64 Pixels"
+              },
+              {
+                "value": "128",
+                "label": "~128 Pixels"
+              },
+              {
+                "value": "256",
+                "label": "~256 Pixels"
+              },
+              {
+                "value": "512",
+                "label": "~512 Pixels"
+              },
+              {
+                "value": "1024",
+                "label": "~1024 Pixels"
+              },
+              {
+                "value": "2048",
+                "label": "~2048 Pixels"
+              },
+              {
+                "value": "4096",
+                "label": "~4096 Pixels"
+              }
+            ],
+            "default": "512"
+          },
+          {
+            "type": "text",
+            "id": "phoneclickableimg",
+            "label": "Image Clickability SVG Code (Phone)"
+          },
+          {
+            "type": "select",
+            "id": "phonesizingmode",
+            "label": "Image Sizing Mode (Phone)",
+            "options": [
+              {
+                "value": "widthAutoHeight",
+                "label": "Define Width - Keep Ratio Height"
+              },
+              {
+                "value": "heightAutoWidth",
+                "label": "Define Height - Keep Ratio Width"
+              },
+              {
+                "value": "explicit",
+                "label": "Define Height & Width"
+              }
+            ],
+            "default": "widthAutoHeight"
+          },
+          {
+            "type": "number",
+            "id": "phonesizewidth",
+            "label": "Image Width Size % (Phone)",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "phonesizeheight",
+            "label": "Image Height Size % (Phone)",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "phonex",
+            "label": "Image X Percentage (Phone)",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "phoney",
+            "label": "Image Y Percentage (Phone)",
+            "default": 50
+          }
+        ]
+      },
+      {
+        "type": "Image",
+        "name": "Image",
+        "settings": [
+          {
+            "type": "number",
+            "id": "zindex",
+            "label": "Image Visual Layer",
+            "default": 1
+          },
+          {
+            "type": "select",
+            "id": "anchor",
+            "label": "Image Anchor Point",
+            "options": [
+              {
+                "value": "topleft",
+                "label": "Top Left"
+              },
+              {
+                "value": "topmiddle",
+                "label": "Top Middle"
+              },
+              {
+                "value": "topright",
+                "label": "Top Right"
+              },
+              {
+                "value": "middleleft",
+                "label": "Middle Left"
+              },
+              {
+                "value": "middle",
+                "label": "Middle"
+              },
+              {
+                "value": "middleright",
+                "label": "Middle Right"
+              },
+              {
+                "value": "bottomleft",
+                "label": "Bottom Left"
+              },
+              {
+                "value": "bottommiddle",
+                "label": "Bottom Middle"
+              },
+              {
+                "value": "bottomright",
+                "label": "Bottom Right"
+              }
+            ],
+            "default": "middle"
+          },
+          {
+            "type": "text",
+            "id": "id",
+            "label": "Image ID (Optional)"
+          },
+          {
+            "type": "image_picker",
+            "id": "pcimg",
+            "label": "Image (PC)"
+          },
+          {
+            "type": "select",
+            "id": "pcapproxsize",
+            "label": "Image Approximate Size (PC)",
+            "options": [
+              {
+                "value": "64",
+                "label": "~64 Pixels"
+              },
+              {
+                "value": "128",
+                "label": "~128 Pixels"
+              },
+              {
+                "value": "256",
+                "label": "~256 Pixels"
+              },
+              {
+                "value": "512",
+                "label": "~512 Pixels"
+              },
+              {
+                "value": "1024",
+                "label": "~1024 Pixels"
+              },
+              {
+                "value": "2048",
+                "label": "~2048 Pixels"
+              },
+              {
+                "value": "4096",
+                "label": "~4096 Pixels"
+              }
+            ],
+            "default": "2048"
+          },
+          {
+            "type": "select",
+            "id": "pcsizingmode",
+            "label": "Image Sizing Mode (PC)",
+            "options": [
+              {
+                "value": "widthAutoHeight",
+                "label": "Define Width - Keep Ratio Height"
+              },
+              {
+                "value": "heightAutoWidth",
+                "label": "Define Height - Keep Ratio Width"
+              },
+              {
+                "value": "explicit",
+                "label": "Define Height & Width"
+              }
+            ],
+            "default": "widthAutoHeight"
+          },
+          {
+            "type": "number",
+            "id": "pcsizewidth",
+            "label": "Image Width Size % (PC)",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "pcsizeheight",
+            "label": "Image Height Size % (PC)",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "pcx",
+            "label": "Image X Percentage (PC)",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "pcy",
+            "label": "Image Y Percentage (PC)",
+            "default": 50
+          },
+          {
+            "type": "image_picker",
+            "id": "phoneimg",
+            "label": "Image (Phone)"
+          },
+          {
+            "type": "select",
+            "id": "phoneapproxsize",
+            "label": "Image Approximate Size (Phone)",
+            "options": [
+              {
+                "value": "64",
+                "label": "~64 Pixels"
+              },
+              {
+                "value": "128",
+                "label": "~128 Pixels"
+              },
+              {
+                "value": "256",
+                "label": "~256 Pixels"
+              },
+              {
+                "value": "512",
+                "label": "~512 Pixels"
+              },
+              {
+                "value": "1024",
+                "label": "~1024 Pixels"
+              },
+              {
+                "value": "2048",
+                "label": "~2048 Pixels"
+              },
+              {
+                "value": "4096",
+                "label": "~4096 Pixels"
+              }
+            ],
+            "default": "512"
+          },
+          {
+            "type": "select",
+            "id": "phonesizingmode",
+            "label": "Image Sizing Mode (Phone)",
+            "options": [
+              {
+                "value": "widthAutoHeight",
+                "label": "Define Width - Keep Ratio Height"
+              },
+              {
+                "value": "heightAutoWidth",
+                "label": "Define Height - Keep Ratio Width"
+              },
+              {
+                "value": "explicit",
+                "label": "Define Height & Width"
+              }
+            ],
+            "default": "widthAutoHeight"
+          },
+          {
+            "type": "number",
+            "id": "phonesizewidth",
+            "label": "Image Width Size % (Phone)",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "phonesizeheight",
+            "label": "Image Height Size % (Phone)",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "phonex",
+            "label": "Image X Percentage (Phone)",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "phoney",
+            "label": "Image Y Percentage (Phone)",
+            "default": 50
+          }
+        ]
+      },
+      {
+        "type": "ResizeTextarea",
+        "name": "Resizing Textbox",
+        "settings": [
+          {
+            "type": "number",
+            "id": "zindex",
+            "label": "Visual Layer",
+            "default": 1
+          },
+          {
+            "type": "text",
+            "id": "targetimgid",
+            "label": "Target Image ID"
+          },
+          {
+            "type": "number",
+            "id": "pctopleftx",
+            "label": "Topleft X Pixel (Left-to-right) (PC)",
+            "default": 0
+          },
+          {
+            "type": "number",
+            "id": "pctoplefty",
+            "label": "Topleft Y Pixel (Top-to-bottom) (PC)",
+            "default": 0
+          },
+          {
+            "type": "number",
+            "id": "pcbottomrightx",
+            "label": "Bottomright X Pixel (Left-to-right) (PC)",
+            "default": 600
+          },
+          {
+            "type": "number",
+            "id": "pcbottomrighty",
+            "label": "Bottomright Y Pixel (Top-to-bottom) (PC)",
+            "default": 600
+          },
+          {
+            "type": "number",
+            "id": "phonetopleftx",
+            "label": "Topleft X Pixel (Left-to-right) (Phone)",
+            "default": 0
+          },
+          {
+            "type": "number",
+            "id": "phonetoplefty",
+            "label": "Topleft Y Pixel (Top-to-bottom) (Phone)",
+            "default": 0
+          },
+          {
+            "type": "number",
+            "id": "phonebottomrightx",
+            "label": "Bottomright X Pixel (Left-to-right) (Phone)",
+            "default": 300
+          },
+          {
+            "type": "number",
+            "id": "phonebottomrighty",
+            "label": "Bottomright Y Pixel (Top-to-bottom) (Phone)",
+            "default": 300
+          },
+          {
+            "type": "text",
+            "id": "startertext",
+            "label": "Starter Text (Optional)",
+            "default": "I am the text in the box"
+          },
+          {
+            "type": "text",
+            "id": "placeholder",
+            "label": "Phantom Text Shown When Editable and Empty (Optional)",
+            "default": "Please enter your email..."
+          },
+          {
+            "type": "checkbox",
+            "id": "readonly",
+            "label": "Read Only",
+            "default": false
+          },
+          {
+            "type": "text",
+            "id": "fontfamily",
+            "label": "Font Family",
+            "default": "'Orbitron', sans-serif"
+          },
+          {
+            "type": "number",
+            "id": "fontsize",
+            "label": "Font Height % (Percent of Total Heigh Per Character)",
+            "default": 80
+          },
+          {
+            "type": "color_background",
+            "id": "colorbackground",
+            "label": "Background Color",
+            "default": "linear-gradient(57deg, rgba(54, 212, 255, 0), rgba(43, 252, 135, 0) 100%)"
+          },
+          {
+            "type": "checkbox",
+            "id": "resizable",
+            "label": "Resizable",
+            "default": false
+          },
+          {
+            "type": "checkbox",
+            "id": "showborder",
+            "label": "Show Border",
+            "default": true
+          },
+          {
+            "type": "checkbox",
+            "id": "showoutline",
+            "label": "Show Outline When Typing",
+            "default": true
+          },
+          {
+            "type": "checkbox",
+            "id": "singleline",
+            "label": "Format Like Single Line Input",
+            "default": true
+          },
+          {
+            "type": "radio",
+            "id": "customfunction",
+            "label": "Custom Functionality",
+            "options": [
+              {
+                "value": "none",
+                "label": "None"
+              },
+              {
+                "value": "search",
+                "label": "Search"
+              },
+              {
+                "value": "emailsub",
+                "label": "Email Sub"
+              }
+            ],
+            "default": "none"
+          }
+        ]
+      }
+    ]
+  }
+{% endschema %}
+
+{% stylesheet %}
+{% endstylesheet %}
+
+{% javascript %}
+{% endjavascript %}

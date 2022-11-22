@@ -1,0 +1,200 @@
+<script>
+  (function () {
+    if (typeof window.aaron == "undefined")
+      window.aaron = new Object();
+    if (typeof window.aaron.product == "undefined")
+      window.aaron.product = new Object();
+    if (typeof window.aaron.product.productmodule == "undefined")
+      window.aaron.product.productmodule = new Object();
+    window.aaron.product.productmodule.products = [];
+    window.aaron.product.productmodule.variants = [];
+  })();
+
+  if (((deviceType == "pc" || deviceType == "tablet") && '{{ block.settings.pcimg }}' != "")
+      || (deviceType == "phone" && '{{ block.settings.phoneimg }}' != "")) {
+
+    (function (){
+      //Load products into js from shopify's dumbass liquid
+      let curVariantID = -1; //Define here so isn't redefined in Liquid loop.
+      window.aaron.product.productmodule.products.push({{ product | json }});
+      {% for variant in product.variants %}
+        curVariantID = '{{ variant.id }}';
+        for (let varInd = 0; varInd < window.aaron.product.productmodule.products[window.aaron.product.productmodule.products.length-1].variants.length; varInd++) {
+          let checkVariant = window.aaron.product.productmodule.products[window.aaron.product.productmodule.products.length-1].variants[varInd];
+          if (checkVariant.id == curVariantID) {
+            window.aaron.product.productmodule.products[window.aaron.product.productmodule.products.length-1].variants[varInd].inventory_quantity = {{ variant.inventory_quantity }};
+          }
+        }
+      {% endfor %}
+
+      //Handle adding single or all variants
+      for (let product of window.aaron.product.productmodule.products) {
+        let colorsFoundArray = [];
+        let colorOptionIndex = -1;
+        for (let i = 0;i < product.options.length;i++) {
+          if (product.options[i].toLowerCase().includes("color")) {
+            colorOptionIndex = i;
+            i = product.options.length;
+          }
+        }
+        for (let variant of product.variants) {
+          if (!colorsFoundArray.includes(variant.options[colorOptionIndex])) {
+            variant.parentProduct = product;
+            window.aaron.product.productmodule.variants.push(variant);
+            colorsFoundArray.push(variant.options[colorOptionIndex]);
+          }
+        }
+      }
+    })();
+    
+    (function () {
+      let div = document.createElement("div");
+      div.classList.add("productmodule");
+      div.style.position = "absolute";
+      div.style.margin = "0px";
+      div.style.transform = "translate(-50%,-50%)";
+      div.style.zIndex = {{ block.settings.zindex }};
+      div.style.visibility = "hidden";
+      div.style.cursor = "pointer";
+      div.style.overflow = "hidden";
+      div.dataset.anchor='{{ block.settings.anchor }}';
+      div.dataset.pcsizingmode='{{ block.settings.pcsizingmode }}';
+      div.dataset.pcsizewidth='{{ block.settings.pcsizewidth }}';
+      div.dataset.pcsizeheight='{{ block.settings.pcsizeheight }}';
+      div.dataset.pcx='{{ block.settings.pcx }}';
+      div.dataset.pcy='{{ block.settings.pcy }}';
+      div.dataset.pcproductwidth='{{ block.settings.pcproductwidth }}'
+      div.dataset.phonesizingmode='{{ block.settings.phonesizingmode }}';
+      div.dataset.phonesizewidth='{{ block.settings.phonesizewidth }}';
+      div.dataset.phonesizeheight='{{ block.settings.phonesizeheight }}';
+      div.dataset.phonex='{{ block.settings.phonex }}';
+      div.dataset.phoney='{{ block.settings.phoney }}';
+      div.dataset.phoneproductwidth='{{ block.settings.phoneproductwidth }}'
+      div.ondragstart = function () {
+        return false;
+      }
+
+      let backplate = document.createElement("img");
+      backplate.style.width = "100%";
+      backplate.style.height = "100%";
+      if (deviceType == "pc" || deviceType == "tablet")
+        backplate.src = '{{ block.settings.pcimg | image_url: width: original }}' + "&width=" + '{{ block.settings.pcapproxsize }}';
+      else if (deviceType == "phone")
+        backplate.src = '{{ block.settings.phoneimg | image_url: width: original }}' + "&width=" + '{{ block.settings.phoneapproxsize }}';
+
+      let product = document.createElement("img");
+      product.style.position = "absolute";
+      product.style.left = "50%";
+      product.style.top = "50%";
+      product.style.transform = "translate(-50%,-50%)";
+      product.style.width = (deviceType == "pc" || deviceType == "tablet") ? (div.dataset.pcproductwidth + "%") : (div.dataset.phoneproductwidth + "%");
+      product.style.height = "auto";
+      //Handle product src
+      let src;
+      let queryMap = window.aaron.common.urltool.GetQueries();
+      if (Object.keys(queryMap).includes("variant")) {
+        for (let variant of window.aaron.product.productmodule.products[0].variants) {
+          if (queryMap.variant == variant.id) {
+            src = variant.featured_image.src;
+            break;
+          }
+        }
+      } else {
+        src = window.aaron.product.productmodule.products[0].images[0];
+      }
+      if (deviceType == "pc" || deviceType == "tablet")
+        product.src = src;
+      else if (deviceType == "phone")
+        product.src = src;
+
+      // let producthoverzoom = document.createElement("img");
+      // producthoverzoom.style.position = "absolute";
+      // producthoverzoom.style.transform = "translate(-50%,-50%)";
+      // producthoverzoom.style.backgroundColor = "rgba(0, 0, 255, 0.2)";
+      // producthoverzoom.style.left = "50%";
+      // producthoverzoom.style.top = "50%";
+      // producthoverzoom.style.width = (deviceType == "pc" || deviceType == "tablet") ? ((div.dataset.pcproductwidth * {{ block.settings.pcproductzoom }}) + "%") : ((div.dataset.phoneproductwidth * {{ block.settings.pcproductzoom }}) + "%");
+      // producthoverzoom.style.height = "auto";
+      // producthoverzoom.style.visibility = "hidden";
+      // product.onload = function () {
+      //   producthoverzoom.src = product.src;
+      // }
+      // div.onmouseleave = function () {
+      //   producthoverzoom.style.visibility = "hidden"; //Gotta double down here for fast mouse movements
+      // }
+      // div.onmousemove = function (event) {
+      //   let divMeasurement = div.getBoundingClientRect();
+      //   let productMeasurement = product.getBoundingClientRect();
+      //   let x = event.clientX, y = event.clientY;
+      //   if (x > productMeasurement.left && x < productMeasurement.left + productMeasurement.width
+      //       && y > productMeasurement.top && y < productMeasurement.top + productMeasurement.height) {
+      //     let xPercentage = (x - productMeasurement.left) / (productMeasurement.width);
+      //     let yPercentage = (y - productMeasurement.top) / (productMeasurement.height);
+      //     producthoverzoom.style.transform = "translate(-" + (xPercentage*100) + "%,-" + (yPercentage*100) + "%)";
+      //     // producthoverzoom.style.left = (-1*xPercentage*100) + "%";
+      //     // producthoverzoom.style.top = (-1*yPercentage*100) + "%";
+      //     producthoverzoom.style.visibility = "visible";
+      //   } else {
+      //     producthoverzoom.style.visibility = "hidden";
+      //   }
+      // }
+
+      let productclickzoomdiv = document.createElement("div");
+      productclickzoomdiv.style.position = "absolute";
+      productclickzoomdiv.style.transform = "translate(-50%,-50%)";
+      productclickzoomdiv.style.backgroundColor = "black";
+      productclickzoomdiv.style.width = (vw*2) + "px";
+      productclickzoomdiv.style.height = (vh*2) + "px";
+      productclickzoomdiv.style.left = "50%";
+      productclickzoomdiv.style.top = "50%";
+      productclickzoomdiv.style.visibility = "hidden";
+      productclickzoomdiv.style.zIndex = 100;
+      let productclickzoom = document.createElement("img");
+      productclickzoom.style.position = "absolute";
+      productclickzoom.style.transform = "translate(-50%,-50%)";
+      productclickzoom.style.backgroundColor = "black";
+      productclickzoom.style.left = "50%";
+      productclickzoom.style.top = "50%";
+      productclickzoom.style.zIndex = 100;
+      productclickzoom.addEventListener('load', () => {
+        let widthRatio = productclickzoom.naturalWidth/vw;
+        let heightRatio = productclickzoom.naturalHeight/vh;
+        if (widthRatio > heightRatio) {
+          productclickzoom.style.width = (vw+2) + "px";
+          productclickzoom.style.height = "auto";
+        } else {
+          productclickzoom.style.width = "auto";
+          productclickzoom.style.height = (vh+2) + "px";
+        }
+      });
+      div.addEventListener('click', () => {
+        productclickzoom.src = product.src;
+        productclickzoomdiv.style.visibility = "visible";
+        productclickzoom.dataset.zoomed = "true";
+      });
+    productclickzoomdiv.addEventListener('click', () => {
+      productclickzoomdiv.style.visibility = "hidden";
+      productclickzoom.dataset.zoomed = "false";
+    });
+  
+      let root = document.getElementById("root");
+      div.appendChild(backplate);
+      div.appendChild(product);
+      // div.appendChild(producthoverzoom);
+      root.appendChild(div);
+      productclickzoomdiv.appendChild(productclickzoom);
+      root.appendChild(productclickzoomdiv);
+  
+      function resizeImage () {
+        window.aaron.common.sizing.DefaultSetSize(div, backplate, true);
+      }
+      backplate.onload = resizeImage;
+      window.aaron.common.sizing.resizeFunctions.push(resizeImage);
+
+      window.aaron.product.productmodule.Update = function (src) {
+        product.src = src;
+        producthoverzoom.src = src;
+      }
+    })();
+  }
+</script>

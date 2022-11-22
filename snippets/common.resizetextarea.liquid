@@ -1,0 +1,275 @@
+<script>
+  (function () {
+    if (typeof window.aaron == "undefined")
+      window.aaron = new Object();
+    if (typeof window.aaron.common == "undefined")
+      window.aaron.common = new Object();
+    if (typeof window.aaron.common.resizetextarea == "undefined")
+      window.aaron.common.resizetextarea = new Object();
+    if (typeof window.aaron.common.resizetextarea.pendingTextareas == "undefined")
+      window.aaron.common.resizetextarea.pendingTextareas = new Object();
+  })();
+  
+  (function () {
+    //Hoist funcs
+    let Startup, AddElems, Activate, Resize;
+    //Hoist vars
+    let input;
+    //Hoist custom funcs
+    let DecodeHTML;
+
+    Startup = function () {
+      //No Startup
+    };
+    AddElems = function () {
+      input = document.createElement("textarea");
+      input.classList.add("resizetextarea");
+      input.id = '{{ block.settings.scrollid }}';
+      if ({{ block.settings.readonly}})
+        input.readOnly = 'true';
+      if (!{{ block.settings.readonly }})
+        input.placeholder = '{{ block.settings.placeholder }}';
+      if (!{{ block.settings.resizable}})
+        input.style.resize = "none";
+      if (!{{ block.settings.showborder}})
+        input.style.border = "none";
+      if (!{{ block.settings.showoutline}})
+        input.style.outline = "none";
+      input.style.position = "absolute";
+      input.style.margin = "0px";
+      input.style.zIndex = {{ block.settings.zindex }};
+      input.style.fontFamily = "{{ block.settings.fontfamily }}";
+      input.style.background = '{{ block.settings.colorbackground }}';
+      input.style.color = "white";
+      // input.style.whiteSpace = "pre";
+      input.style.wordWrap = "anywhere";
+      input.value = DecodeHTML(`{{ block.settings.startertext | escape }}`);
+  
+      if ('{{ block.settings.customfunction }}' == "search") {
+        let queries = window.aaron.common.urltool.GetQueries();
+        if (Object.keys(queries).includes("q"))
+          input.value = decodeURIComponent(queries.q);
+        input.addEventListener("keydown", function(event) {
+          if (event.keyCode === 13) {
+            event.preventDefault();
+            window.location = "/pages/contact-info?view=search&q=" + encodeURIComponent(input.value);
+            return false;
+          }
+        });
+      } else if ('{{ block.settings.customfunction }}' == "emailsub") {
+        input.addEventListener("keydown", function(event) {
+          if (event.keyCode === 13) {
+            event.preventDefault();
+            alert("Subscribed successfully.");
+            return false;
+          }
+        });
+      } else if ('{{ block.settings.customfunction }}' == "addtocart") {
+	    input.style.textAlign = "center";
+		input.value = "Add to Cart";
+		input.style.cursor = "pointer";
+        input.style.visibility = "hidden";
+        input.style.borderRadius = "10px";
+        input.dataset.addtocart = "true";
+        if (deviceType == "pc" || deviceType == "tablet")
+          input.style.border = "solid 3px white";
+        else
+          input.style.border = "solid 1px white";
+        input.addEventListener('click',()=>{
+          if (input.value == "Out of Stock")
+            return;
+          let variant = window.aaron.product.productdetailsmodule.GetVariant();
+		  let formData = {
+           'items': [
+              {
+                'id': variant.id,
+                'quantity': 1
+              }
+            ]
+          };
+          fetch(window.Shopify.routes.root + 'cart/add.js', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+          })
+          .then(response => {
+            return response.json().then(data => ({status: response.status, body: data}));
+          })
+          .then(obj => {
+            let error = false;
+            if (obj != null && obj.body != null && obj.body.description != null) {
+              if (obj.body.description.includes("sold out")) {
+                error = true;
+                alert("Error: That item is sold out!");
+              } else if (obj.body.description.includes("are in your cart")) {
+                error = true;
+                alert("Error: All stock is already in your cart!");
+              } else if (obj.body.description.includes("You can't add more")) {
+                error = true;
+                alert("Error: There is not enough stock!");
+              }
+            }
+            if (error == false) {
+              alert("Added to cart!");
+            }
+            console.log(obj);
+          });
+		});
+        if (window != null && window.aaron != null && window.aaron.product != null && window.aaron.product.productdetailsmodule != null && window.aaron.product.productdetailsmodule.outofstock != null && window.aaron.product.productdetailsmodule.outofstock == true) {
+          input.value = "Out of Stock";
+        }
+	  } else if ('{{ block.settings.customfunction }}' == "checkout") {
+        input.id = "checkout";
+        input.style.textAlign = "center";
+		input.value = "Checkout";
+		input.style.cursor = "pointer";
+        input.style.visibility = "hidden";
+        if (deviceType == "pc" || deviceType == "tablet")
+          input.style.border = "solid 3px white";
+        else
+          input.style.border = "solid 1px white";
+        input.addEventListener('click',()=>{
+          let checkouttext = input;
+          if (checkouttext.value == "Checkout") {
+            window.location = "/checkout";
+          } else if (checkouttext.value == "Update Cart") {
+            let formData = {
+             updates: {
+               
+             }
+            };
+            let productsdiv = document.getElementsByClassName("cartmodule")[0].childNodes[1];
+            for (let inputElem of productsdiv.getElementsByTagName("input")) {
+              formData.updates[inputElem.dataset.lineitemkey] = inputElem.value;
+            }
+            fetch(window.Shopify.routes.root + 'cart/update.js', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(formData)
+            })
+            .then(response => {
+              history.go(0);
+              // return response.json();
+            });
+          }
+		});
+      }
+  
+      let root = document.getElementById("root");
+      root.appendChild(input);
+  
+      Resize();
+
+      if (window != null && window.aaron != null && window.aaron.common != null && window.aaron.common.scrollbar != null && window.aaron.common.scrollbar.pending != null) {
+        let scrollID = '{{ block.settings.scrollid }}';
+        if (typeof window.aaron.common.scrollbar.pending[scrollID] != "undefined") {
+          window.aaron.common.scrollbar.pending[scrollID]();
+          delete window.aaron.common.scrollbar.pending[scrollID];
+        }
+      }
+      if ('{{ block.settings.customfunction }}' == "search" && deviceType == "phone" && window.aaron.common.toggles2 != null && window.aaron.common.toggles2.AttemptAddSearch != null) {
+        // console.log("resizetextarea: response A");
+        window.aaron.common.resizetextarea.SearchInputRef = input;
+        window.aaron.common.toggles2.AttemptAddSearch();
+      } else {
+        // console.log("resizetextarea: response B");
+        window.aaron.common.resizetextarea.SearchInputRef = input;
+      }
+    };
+    Activate = function () {
+      //No Activate
+    };
+    Resize = function () {
+      let imageID = '{{ block.settings.targetimgid }}';
+      let img = document.getElementById(imageID);
+      function doStuff (imgLeft, imgTop) {
+        console.log("resizetextarea: doing stuff");
+        img = document.getElementById(imageID) || document.getElementById("root");
+        let originalTotalWidth = img.naturalWidth || 0;
+        let originalTotalHeight = img.naturalHeight || 0;
+        let originalTopLeft, originalBottomRight;
+        if (deviceType == "pc" || deviceType == "tablet") {
+          originalTopLeft = [{{ block.settings.pctopleftx }}, {{ block.settings.pctoplefty }}];
+          originalBottomRight = [{{ block.settings.pcbottomrightx }}, {{ block.settings.pcbottomrighty }}];
+        } else if (deviceType == "phone") {
+          originalTopLeft = [{{ block.settings.phonetopleftx }}, {{ block.settings.phonetoplefty }}];
+          originalBottomRight = [{{ block.settings.phonebottomrightx }}, {{ block.settings.phonebottomrighty }}];
+        }
+        let widthRatio = parseInt(img.style.width) / originalTotalWidth;
+        let heightRatio = parseInt(img.style.height) / originalTotalHeight;
+        let resizedTopLeft = [originalTopLeft[0]*widthRatio, originalTopLeft[1]*heightRatio];
+        let resizedBottomRight = [originalBottomRight[0]*widthRatio, originalBottomRight[1]*heightRatio];
+        let height = (resizedBottomRight[1] - resizedTopLeft[1]);
+        input.style.left = (imgLeft + resizedTopLeft[0]) + "px";
+        input.style.top = (imgTop + resizedTopLeft[1]) + "px";
+        input.style.width = (resizedBottomRight[0] - resizedTopLeft[0]) + "px";
+        input.style.height = height + "px";
+        let tempFontHeightCalc = height * {{ block.settings.fontsize }}/100;
+        input.style.fontSize = tempFontHeightCalc + "px";
+        input.style.visibility = "visible";
+        if ({{ block.settings.singleline }}) { //This must come after the resize because it uses scripting to edit the top padding to center
+          input.style.whiteSpace = "nowrap";
+          let style = window.getComputedStyle(input);
+          console.log("resizetextarea height: " + style.height);
+          input.style.lineHeight = parseInt(style.height) + "px";
+          input.style.overflow = "hidden";
+        }
+        //Handle common.scrollbar if applicable
+        if (window != null && window.aaron != null && window.aaron.common != null && window.aaron.common.scrollbar != null && window.aaron.common.scrollbar.resizefuncs != null) {
+          let scrollID = '{{ block.settings.scrollid }}';
+          if (typeof window.aaron.common.scrollbar.resizefuncs[scrollID] != "undefined") {
+            window.aaron.common.scrollbar.resizefuncs[scrollID]();
+          }
+        }
+      }
+      if (imageID == "") {
+        console.log("resizetextarea: A1");
+        let originalTopLeft, originalBottomRight;
+        if (deviceType == "pc" || deviceType == "tablet") {
+          originalTopLeft = [{{ block.settings.pctopleftx }}, {{ block.settings.pctoplefty }}];
+          originalBottomRight = [{{ block.settings.pcbottomrightx }}, {{ block.settings.pcbottomrighty }}];
+        } else if (deviceType == "phone") {
+          originalTopLeft = [{{ block.settings.phonetopleftx }}, {{ block.settings.phonetoplefty }}];
+          originalBottomRight = [{{ block.settings.phonebottomrightx }}, {{ block.settings.phonebottomrighty }}];
+        }
+        let height = (originalBottomRight[1] - originalTopLeft[1]);
+        input.style.left = originalTopLeft[0] + "px";
+        input.style.top = originalTopLeft[1] + "px";
+        input.style.width = (originalBottomRight[0] - originalTopLeft[0]) + "px";
+        input.style.height = height + "px";
+        let tempFontHeightCalc = height * {{ block.settings.fontsize }}/100;
+        input.style.fontSize = tempFontHeightCalc + "px";
+      } else if ('{{ block.settings.customfunction }}' == "search" && deviceType == "phone") { //This must come before below
+        console.log("resizetextarea: A3");
+        doStuff(0,0);
+      } else if (img == null || img.naturalWidth == 0 || img.getBoundingClientRect().left < 0) {
+        console.log("resizetextarea: A2");
+        if (!Object.keys(window.aaron.common.resizetextarea.pendingTextareas).includes(imageID)) {
+          window.aaron.common.resizetextarea.pendingTextareas[imageID] = [];
+        }
+        window.aaron.common.resizetextarea.pendingTextareas[imageID].push(doStuff);
+      } else {
+        console.log("resizetextarea: A4");
+        let imgMeasurement = img.getBoundingClientRect();
+        doStuff(imgMeasurement.left, imgMeasurement.top);
+        if (!Object.keys(window.aaron.common.resizetextarea.pendingTextareas).includes(imageID)) {
+          window.aaron.common.resizetextarea.pendingTextareas[imageID] = [];
+        }
+        window.aaron.common.resizetextarea.pendingTextareas[imageID].push(doStuff);
+      }
+    };
+    DecodeHTML = function (html) {
+      let txt = document.createElement("textarea");
+      txt.innerHTML = html;
+      return txt.value;
+    };
+    // window.aaron.common.modulebasics.StartupFuncs.push(Startup);
+    window.aaron.common.modulebasics.AddElemsFuncs.push(AddElems);
+    // window.aaron.common.modulebasics.ActivateFuncs.push(Activate);
+    window.aaron.common.modulebasics.ResizeFuncs.push(Resize);
+  })();
+</script>

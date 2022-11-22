@@ -1,0 +1,130 @@
+<script>
+  (function () {
+    if (typeof window.aaron == "undefined")
+      window.aaron = new Object();
+    if (typeof window.aaron.common == "undefined")
+      window.aaron.common = new Object();
+    if (typeof window.aaron.common.sizing == "undefined")
+      window.aaron.common.sizing = new Object();
+    // window.aaron.common.sizing.lastWidth // this is set below
+    window.aaron.common.sizing.resizeFunctions = [];
+  })();
+  
+  let vw, vh;
+  let deviceType;
+  window.aaron.common.sizing.updateSizing = function () {
+    vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+    vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
+    if (vw <= 428) {
+      deviceType = "phone";
+    } else if (vw <= 834) {
+      deviceType = "tablet";
+    } else {
+      deviceType = "pc";
+    }
+  }
+  window.aaron.common.sizing.updateSizing();
+
+  window.aaron.common.sizing.lastWidth = vw;
+  window.addEventListener('resize', (event) => {
+    window.aaron.common.sizing.updateSizing();
+    if (vw != window.aaron.common.sizing.lastWidth) {
+      window.aaron.common.sizing.lastWidth = vw;
+      for (let f of window.aaron.common.sizing.resizeFunctions)
+        f();
+    }
+  });
+
+  window.aaron.common.sizing.DefaultSetSize = function (elem, imgElemForOriginalRatio, setVisible) {
+    if (setVisible) {
+      elem.style.visibility = "visible";
+    }
+    let originalRatio = imgElemForOriginalRatio ? imgElemForOriginalRatio.naturalWidth / imgElemForOriginalRatio.naturalHeight : 1;
+    let width, height, x, y;
+    if (deviceType == "pc" || deviceType == "tablet") {
+      let widthPercentSetting = elem.dataset.pcsizewidth/100;
+      let heightPercentSetting = elem.dataset.pcsizeheight/100;
+      switch (elem.dataset.pcsizingmode) {
+        case "widthAutoHeight":
+          width = vw * widthPercentSetting;
+          height = width / originalRatio;
+          break;
+        case "heightAutoWidth":
+          height = vh * heightPercentSetting;
+          width = height * originalRatio;
+          break;
+        case "explicit":
+          width = vw * widthPercentSetting;
+          height = vh * heightPercentSetting;
+          break;
+      }
+      x = elem.dataset.pcx;
+      y = elem.dataset.pcy;
+    } else if (deviceType == "phone") {
+      widthPercentSetting = elem.dataset.phonesizewidth/100;
+      heightPercentSetting = elem.dataset.phonesizeheight/100;
+      switch (elem.dataset.phonesizingmode) {
+        case "widthAutoHeight":
+          width = vw * widthPercentSetting;
+          height = width / originalRatio;
+          break;
+        case "heightAutoWidth":
+          height = vh * heightPercentSetting;
+          width = height * originalRatio;
+          break;
+        case "explicit":
+          width = vw * widthPercentSetting;
+          height = vh * heightPercentSetting;
+          break;
+      }
+      x = elem.dataset.phonex;
+      y = elem.dataset.phoney;
+    }
+    elem.style.width = width + "px";
+    elem.style.height = height + "px";
+    //Handle anchor offsets
+      //Version compatibility
+    let anchor;
+    if (typeof elem.dataset.anchor != "undefined")
+      anchor = elem.dataset.anchor;
+    else {
+      anchor = (deviceType == "pc" || deviceType == "tablet") ? elem.dataset.pcanchor : elem.dataset.phoneanchor;
+    }
+      //--Version compatibility
+    let offsetX = 0, offsetY = 0;
+    switch (anchor) {
+      case "topleft":
+        offsetX += width / 2;
+        offsetY += height / 2;
+        break;
+      case "topmiddle":
+        offsetY += height / 2;
+        break;
+      case "topright":
+        offsetX -= width / 2;
+        offsetY += height / 2;
+        break;
+      case "middleleft":
+        offsetX += width / 2;
+        break;
+      case "middle":
+        break;
+      case "middleright":
+        offsetX -= width / 2;
+        break;
+      case "bottomleft":
+        offsetX += width / 2;
+        offsetY -= height / 2;
+        break;
+      case "bottommiddle":
+        offsetY -= height / 2;
+        break;
+      case "bottomright":
+        offsetX -= width / 2;
+        offsetY -= height / 2;
+        break;
+    }
+    elem.style.left = ((vw * (x/100)) + offsetX) + "px";
+    elem.style.top = ((vh * (y/100)) + offsetY) + "px";
+  };
+</script>

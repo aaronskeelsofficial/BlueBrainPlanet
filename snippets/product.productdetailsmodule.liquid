@@ -1,0 +1,284 @@
+<script>
+  (function () {
+    if (typeof window.aaron == "undefined")
+      window.aaron = new Object();
+    if (typeof window.aaron.product == "undefined")
+      window.aaron.product = new Object();
+    if (typeof window.aaron.product.productdetailsmodule == "undefined")
+      window.aaron.product.productdetailsmodule = new Object();
+    if (typeof window.aaron.product.productdetailsmodule.products == "undefined")
+      window.aaron.product.productdetailsmodule.products = [];
+    if (typeof window.aaron.product.productdetailsmodule.variants == "undefined")
+      window.aaron.product.productdetailsmodule.variants = [];
+    if (typeof window.aaron.product.productdetailsmodule.variantoptions == "undefined")
+      window.aaron.product.productdetailsmodule.variantoptions = new Object();
+  })();
+
+  (function (){
+    //Load products into js from shopify's dumbass liquid
+    let curVariantID = -1; //Define here so isn't redefined in Liquid loop.
+    window.aaron.product.productdetailsmodule.products.push({{ product | json }});
+    {% for variant in product.variants %}
+      curVariantID = '{{ variant.id }}';
+      for (let varInd = 0; varInd < window.aaron.product.productdetailsmodule.products[window.aaron.product.productdetailsmodule.products.length-1].variants.length; varInd++) {
+        let checkVariant = window.aaron.product.productdetailsmodule.products[window.aaron.product.productdetailsmodule.products.length-1].variants[varInd];
+        if (checkVariant.id == curVariantID) {
+          window.aaron.product.productdetailsmodule.products[window.aaron.product.productdetailsmodule.products.length-1].variants[varInd].inventory_quantity = {{ variant.inventory_quantity }};
+        }
+      }
+    {% endfor %}
+
+    //Handle adding single or all variants
+    for (let product of window.aaron.product.productdetailsmodule.products) {
+      let colorsFoundArray = [];
+      let colorOptionIndex = -1;
+      for (let i = 0;i < product.options.length;i++) {
+        if (product.options[i].toLowerCase().includes("color")) {
+          colorOptionIndex = i;
+          i = product.options.length;
+        }
+      }
+      for (let variant of product.variants) {
+        if (!colorsFoundArray.includes(variant.options[colorOptionIndex])) {
+          variant.parentProduct = product;
+          window.aaron.product.productdetailsmodule.variants.push(variant);
+          colorsFoundArray.push(variant.options[colorOptionIndex]);
+        }
+      }
+    }
+
+    //Handle variant options
+    for (let option of window.aaron.product.productdetailsmodule.products[0].options) {
+      window.aaron.product.productdetailsmodule.variantoptions[option] = [];
+    }
+    for (let variant of window.aaron.product.productdetailsmodule.products[0].variants) {
+      for (let i = 0;i < variant.options.length;i++) {
+        let option = window.aaron.product.productdetailsmodule.products[0].options[i];
+        if (!window.aaron.product.productdetailsmodule.variantoptions[option].includes(variant.options[i]))
+          window.aaron.product.productdetailsmodule.variantoptions[option].push(variant.options[i]);
+      }
+    }
+  })();
+
+  function handleAddToCart (variant) {
+    if (variant.inventory_quantity == 0) {
+      window.aaron.product.productdetailsmodule.outofstock = true;
+      for (let textareaElem of document.getElementsByClassName("resizetextarea")) {
+        if (textareaElem.dataset.addtocart == "true") {
+          textareaElem.value = "Out of Stock";
+          textareaElem.style.cursor = "default";
+        }
+      }
+    } else {
+      window.aaron.product.productdetailsmodule.outofstock = false;
+      for (let textareaElem of document.getElementsByClassName("resizetextarea")) {
+        if (textareaElem.dataset.addtocart == "true") {
+          textareaElem.value = "Add to Cart";
+          textareaElem.style.cursor = "pointer";
+        }
+      }
+    }
+  }
+  
+  (function () {
+    //Hoist funcs
+    let Startup, AddElems, Activate, Resize;
+    //Hoist vars
+    let div,divtitle,divcompany,divoptions;
+
+    Startup = function () {
+      //No Startup
+    };
+    AddElems = function () {
+      div = document.createElement("div");
+      div.classList.add("productdetailsmodule");
+      div.style.resize = "none";
+      div.style.border = "none";
+      div.style.outline = "none";
+      div.style.position = "absolute";
+      div.style.margin = "0px";
+      div.style.display = "flex";
+      div.style.flexDirection = "column";
+      div.style.flexWarp = "wrap";
+      div.style.justifyContent = "space-between";
+      div.style.zIndex = {{ block.settings.zindex }};
+      div.style.fontFamily = "{{ block.settings.fontfamily }}";
+      div.style.background = '{{ block.settings.colorbackground }}';
+      div.style.visibility = "hidden";
+      divtitle = document.createElement("div");
+      let ptitle = document.createElement("p");
+      ptitle.innerText = '{{ product.title }}';
+      ptitle.readOnly = '';
+      divtitle.appendChild(ptitle);
+      div.appendChild(divtitle);
+      divcompany = document.createElement("div");
+      let pcompany = document.createElement("p");
+      pcompany.innerText = "BLUE BRAIN PLANET";
+      pcompany.readOnly = '';
+      divcompany.appendChild(pcompany);
+      div.appendChild(divcompany);
+      divoptions = document.createElement("div");
+      divoptions.style.display = "flex";
+      for (let i = 0;i < Object.keys(window.aaron.product.productdetailsmodule.variantoptions).length;i++) {
+        let divoption = document.createElement("div");
+        let option = Object.keys(window.aaron.product.productdetailsmodule.variantoptions)[i];
+        let poption = document.createElement("p");
+        poption.innerText = option + ": ";
+        poption.readOnly = '';
+        divoption.appendChild(poption);
+        let soption = document.createElement("select");
+        soption.style.backgroundColor = "rgb(46,124,175)";
+        soption.style.borderStyle = "solid";
+        soption.style.borderColor = "white";
+        soption.style.borderWidth = (deviceType == "pc" || deviceType == "tablet") ? "3px" : "1px";
+        soption.style.color = "white";
+        soption.style.borderRadius = "10px";
+        if (option.toLowerCase().includes("size")) {
+          soption.addEventListener('change',()=>{
+            window.aaron.product.productdetailsmodule.ChangeDetected(false);
+          });
+        } else {
+          soption.addEventListener('change',()=>{
+            window.aaron.product.productdetailsmodule.ChangeDetected(true);
+          });
+        }
+        for (let optionchoice of window.aaron.product.productdetailsmodule.variantoptions[option]) {
+          let voption = document.createElement("option");
+          voption.value = optionchoice;
+          voption.innerText = optionchoice;
+          soption.appendChild(voption);
+        }
+        divoption.appendChild(soption);
+        divoptions.appendChild(divoption);
+      }
+      div.appendChild(divoptions);
+  
+      let root = document.getElementById("root");
+      root.appendChild(div);
+
+      //Handle identifying if variant is selected
+      let queries = window.aaron.common.urltool.GetQueries();
+      let keys = Object.keys(queries);
+      if (keys.includes("variant")) {
+        for (let variant of window.aaron.product.productmediamodule.products[0].variants) {
+          if (variant.id == queries.variant) {
+            //We have found the variant
+			//Now loop through all it's options and set them to the soption value
+			let divoptions = document.getElementsByClassName("productdetailsmodule")[0].childNodes[2];
+			for (let i = 0;i < variant.options.length;i++) {
+			  let soption = divoptions.childNodes[i].childNodes[1];
+			  soption.value = variant.options[i];
+			}
+            handleAddToCart(variant);
+          }
+        }
+      }
+      Resize();
+    };
+    Activate = function () {
+      //No Activate
+    };
+    Resize = function () {
+      let imageID = '{{ block.settings.targetimgid }}';
+      let img = document.getElementById(imageID);
+      function doStuff (imgLeft, imgTop) {
+        img = document.getElementById(imageID);
+        let originalTotalWidth = img.naturalWidth;
+        let originalTotalHeight = img.naturalHeight;
+        let originalTopLeft, originalBottomRight;
+        if (deviceType == "pc" || deviceType == "tablet") {
+          originalTopLeft = [{{ block.settings.pctopleftx }}, {{ block.settings.pctoplefty }}];
+          originalBottomRight = [{{ block.settings.pcbottomrightx }}, {{ block.settings.pcbottomrighty }}];
+        } else if (deviceType == "phone") {
+          originalTopLeft = [{{ block.settings.phonetopleftx }}, {{ block.settings.phonetoplefty }}];
+          originalBottomRight = [{{ block.settings.phonebottomrightx }}, {{ block.settings.phonebottomrighty }}];
+        }
+        let widthRatio = parseInt(img.style.width) / originalTotalWidth;
+        let heightRatio = parseInt(img.style.height) / originalTotalHeight;
+        let resizedTopLeft = [originalTopLeft[0]*widthRatio, originalTopLeft[1]*heightRatio];
+        let resizedBottomRight = [originalBottomRight[0]*widthRatio, originalBottomRight[1]*heightRatio];
+        let height = (resizedBottomRight[1] - resizedTopLeft[1]);
+        div.style.left = (imgLeft + resizedTopLeft[0]) + "px";
+        div.style.top = (imgTop + resizedTopLeft[1]) + "px";
+        div.style.width = (resizedBottomRight[0] - resizedTopLeft[0]) + "px";
+        div.style.height = height + "px";
+        let tempFontHeightCalc = height * {{ block.settings.fontsize }}/100;
+        div.style.fontSize = tempFontHeightCalc + "px";
+        div.style.visibility = "visible";
+        for (let childNode of div.childNodes[2].childNodes) {
+          let select = childNode.childNodes[1];
+          select.style.fontSize = (tempFontHeightCalc * .5) + "px";
+        }
+      }
+      if (img == null || img.naturalWidth == 0 || img.getBoundingClientRect().left < 0) {
+        if (!Object.keys(window.aaron.common.resizetextarea.pendingTextareas).includes(imageID)) {
+          window.aaron.common.resizetextarea.pendingTextareas[imageID] = [];
+        }
+        window.aaron.common.resizetextarea.pendingTextareas[imageID].push(doStuff);
+      } else {
+        let imgMeasurement = img.getBoundingClientRect();
+        doStuff(imgMeasurement.left, imgMeasurement.top);
+        if (!Object.keys(window.aaron.common.resizetextarea.pendingTextareas).includes(imageID)) {
+          window.aaron.common.resizetextarea.pendingTextareas[imageID] = [];
+        }
+        window.aaron.common.resizetextarea.pendingTextareas[imageID].push(doStuff);
+      }
+    };
+    // window.aaron.common.modulebasics.StartupFuncs.push(Startup);
+    window.aaron.common.modulebasics.AddElemsFuncs.push(AddElems);
+    // window.aaron.common.modulebasics.ActivateFuncs.push(Activate);
+    window.aaron.common.modulebasics.ResizeFuncs.push(Resize);
+
+    window.aaron.product.productdetailsmodule.GetVariant = function () {
+      let queryMap = window.aaron.common.urltool.GetQueries();
+      if (typeof queryMap.variant != "undefined") {
+        for (let variant of window.aaron.product.productdetailsmodule.products[0].variants) {
+          if (variant.id == queryMap.variant) {
+            return variant;
+          }
+        }
+      } else {
+        return window.aaron.product.productdetailsmodule.variants[0];
+      }
+    };
+
+    window.aaron.product.productdetailsmodule.ChangeDetected = function (isNotSizeOption) {
+      let optionsSelected = [];
+      for (let divoption of divoptions.childNodes) {
+        let soption = divoption.childNodes[1];
+        optionsSelected.push(soption.value);
+      }
+      let selectedVariant,selectedVariantIndex;
+      //Loop through all variants
+      for (let i = 0;i < window.aaron.product.productdetailsmodule.products[0].variants.length;i++) {
+        let variant = window.aaron.product.productdetailsmodule.products[0].variants[i];
+        let mismatchFlag = false;
+        for (let j = 0;j < variant.options.length;j++) {
+          let variantoption = variant.options[j];
+          if (optionsSelected[j] != "" && variantoption != optionsSelected[j])
+            mismatchFlag = true;
+        }
+        if (!mismatchFlag) {
+          selectedVariant = variant;
+          selectedVariantIndex = i;
+        }
+      }
+      handleAddToCart(selectedVariant);
+      //Update URL
+      let queryMap = window.aaron.common.urltool.GetQueries();
+      queryMap.variant = selectedVariant.id;
+      window.aaron.common.urltool.UpdateQueries(queryMap, false);
+      if (isNotSizeOption) {
+        //Update product graphic
+        window.aaron.product.productmodule.Update(selectedVariant.featured_image.src);
+        //Update media graphic
+        let mediaIndex = window.aaron.product.productmediamodule.GetSelectedMediaIndex(selectedVariant);
+        window.aaron.product.productmediamodule.UpdateSelectedMedia(mediaIndex);
+      }
+    };
+  })();
+
+  window.aaron.product.productdetailsmodule.Update = function (variantID) {
+    
+  };
+</script>

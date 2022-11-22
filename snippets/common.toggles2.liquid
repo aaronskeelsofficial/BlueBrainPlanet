@@ -1,0 +1,327 @@
+<script>
+  (function () {
+    if (typeof window.aaron == "undefined")
+      window.aaron = new Object();
+    if (typeof window.aaron.common == "undefined")
+      window.aaron.common = new Object();
+    if (typeof window.aaron.common.toggles2 == "undefined")
+      window.aaron.common.toggles2 = new Object();
+    if (typeof window.aaron.common.toggles2.queueToBeAdded == "undefined")
+      window.aaron.common.toggles2.queueToBeAdded = new Object();
+  })();
+
+  if (((deviceType == "pc" || deviceType == "tablet") && '{{ block.settings.pcimg }}' != "")
+      || (deviceType == "phone" && '{{ block.settings.phoneimg }}' != "")) {
+    //Hoist funcs
+    let Startup, AddElems, Activate, Resize;
+    //Hoist vars
+    let buttondiv,buttonimg,menudiv;
+    //Misc vars
+    let MenuBaseZIndex = 100, isSearchAdded = false;
+    
+    Startup = function () {
+      //Create menu button
+      buttondiv = document.createElement("div");
+      buttondiv.style.position = "absolute";
+      buttondiv.style.transform = "translate(-50%,-50%)";
+      buttondiv.style.cursor = "pointer";
+      buttondiv.style.zIndex = {{ block.settings.zindex }}+MenuBaseZIndex;
+      buttondiv.dataset.pcanchor='{{ block.settings.pcanchor }}';
+      buttondiv.dataset.pcsizingmode='{{ block.settings.pcsizingmode }}';
+      buttondiv.dataset.pcsizewidth='{{ block.settings.pcsizewidth }}';
+      buttondiv.dataset.pcsizeheight='{{ block.settings.pcsizeheight }}';
+      buttondiv.dataset.pcx='{{ block.settings.pcx }}';
+      buttondiv.dataset.pcy='{{ block.settings.pcy }}';
+      buttondiv.dataset.phoneanchor='{{ block.settings.phoneanchor }}';
+      buttondiv.dataset.phonesizingmode='{{ block.settings.phonesizingmode }}';
+      buttondiv.dataset.phonesizewidth='{{ block.settings.phonesizewidth }}';
+      buttondiv.dataset.phonesizeheight='{{ block.settings.phonesizeheight }}';
+      buttondiv.dataset.phonex='{{ block.settings.phonex }}';
+      buttondiv.dataset.phoney='{{ block.settings.phoney }}';
+      buttonimg = document.createElement("img");
+      buttonimg.style.width = "100%";
+      buttonimg.style.height = "100%";
+      if (deviceType == "pc" || deviceType == "tablet")
+        buttonimg.src = '{{ block.settings.pcimg | image_url }}?width={{ block.settings.pcapproxsize }}'
+      else if (deviceType == "phone")
+        buttonimg.src = '{{ block.settings.phoneimg | image_url }}?width={{ block.settings.phoneapproxsize }}'
+      buttonimg.ondragstart = function () {
+        return false;
+      }
+      let root = document.getElementById("root");
+      buttondiv.appendChild(buttonimg);
+      root.appendChild(buttondiv);
+      buttonimg.onload = Resize;
+      //Create menu
+      menudiv = document.createElement("div");
+      menudiv.id = "togglemenu";
+      menudiv.style.position = "absolute";
+      menudiv.style.transition = "1s";
+      menudiv.style.zIndex = MenuBaseZIndex;
+      menudiv.style.display = "grid";
+      menudiv.style.alignContent = "center";
+      if (deviceType == "pc" || deviceType == "tablet") {
+        menudiv.style.transform = "translate(-50%,-50%)";
+        menudiv.style.height = "min-content";
+        menudiv.style.left = (.5*vw) + "px";
+        menudiv.style.top = (.5*vh) + "px";
+        menudiv.style.visibility = "hidden";
+        menudiv.style.opacity = 0;
+        menudiv.style.padding = "20px";
+        menudiv.style.backgroundColor = "rgba(0,0,255,.95)";
+        menudiv.style.borderRadius = "20px";
+      } else {
+        menudiv.style.placeItems = "center";
+        menudiv.style.height = vh + "px";
+        menudiv.style.width = vw + "px";
+        menudiv.style.left = (0) + "px";
+        menudiv.style.top = (-vh) + "px";
+        menudiv.style.backgroundColor = "black";
+      }
+      root.appendChild(menudiv);
+      let isMenuHidden = true; //PC & Phone
+      let runningTimeout = null; //PC
+      buttondiv.addEventListener('click', (event) => { //This has to be down here because the menudiv wasn't made up top yet
+        if (deviceType == "pc" || deviceType == "tablet") {
+          if (runningTimeout != null) {
+            clearTimeout(runningTimeout);
+            runningTimeout = null;
+          }
+          if (isMenuHidden == false) {
+            isMenuHidden = true;
+            let cacheTransition1;
+            for (let toggle of menudiv.getElementsByTagName("toggle")) {
+              cacheTransition1 = toggle.style.transition;
+              toggle.style.transition = "";
+            }
+            menudiv.style.opacity = 0;
+            runningTimeout = setTimeout(() => {
+              runningTimeout = null;
+              let cacheTransition2 = menudiv.style.transition;
+              menudiv.style.transition = "";
+              menudiv.style.visibility = "hidden";
+              menudiv.style.transition = cacheTransition2;
+              for (let toggle of menudiv.getElementsByTagName("toggle")) {
+                toggle.style.transition = cacheTransition1;
+              }
+            }, 1);
+          } else {
+            isMenuHidden = false;
+            let cacheTransition1;
+            for (let toggle of menudiv.getElementsByTagName("toggle")) {
+              cacheTransition1 = toggle.style.transition;
+              toggle.style.transition = "";
+            }
+            let cacheTransition2 = menudiv.style.transition;
+            menudiv.style.transition = "";
+            menudiv.style.visibility = "visible";
+            menudiv.style.transition = cacheTransition2;
+            menudiv.style.opacity = 1;
+            runningTimeout = setTimeout(() => {
+              runningTimeout = null;
+              for (let toggle of menudiv.getElementsByTagName("toggle")) {
+                toggle.style.transition = cacheTransition1;
+              }
+            }, 1);
+          }
+        } else if (deviceType == "phone") {
+          if (isMenuHidden) {
+            isMenuHidden = false;
+            menudiv.style.top = "0px";
+          } else {
+            isMenuHidden = true;
+            menudiv.style.top = (-vh) + "px";
+          }
+        }
+      });
+      //Init cookies if don't exist
+      if (getCookie("togglebggifon") == "") {
+        setCookie("togglebggifon", "true", 365);
+      }
+      if (getCookie("togglegridgifon") == "") {
+        setCookie("togglegridgifon", "true", 365);
+      }
+      //Implement cookies
+      if (true) { //All pages have animated bg
+        window.aaron.common.toggles2.queueToBeAdded["Background Gif"] = "togglebggifon";
+      }
+      if (window != null && window.aaron != null && window.aaron.collection != null && window.aaron.collection.grid != null) { //Collection grid
+        window.aaron.common.toggles2.queueToBeAdded["Model Gif"] = "togglegridgifon";
+      }
+      window.aaron.common.toggles2.AddElems();
+    };
+    
+    window.aaron.common.toggles2.AddElems = function () {
+      //Add redirect components in menu
+      if (deviceType == "phone") {
+        let a1 = document.createElement("a");
+        a1.style.textDecorationLine = "none";
+        a1.href = "/collections/phase-2";
+        let p1 = document.createElement("p");
+        p1.innerText = "Products";
+        p1.style.color = "white";
+        let a2 = document.createElement("a");
+        a2.style.textDecorationLine = "none";
+        a2.href = "/pages/contact-info?view=info";
+        let p2 = document.createElement("p");
+        p2.innerText = "Info";
+        p2.style.color = "white";
+        let a3 = document.createElement("a");
+        a3.style.textDecorationLine = "none";
+        a3.href = "mailto:bluebrainplanet@gmail.com";
+        let p3 = document.createElement("p");
+        p3.innerText = "Contact";
+        p3.style.color = "white";
+        let a4 = document.createElement("a");
+        a4.style.textDecorationLine = "none";
+        a4.href = "/pages/contact-info?view=privacyandterms";
+        let p4 = document.createElement("p");
+        p4.innerText = "Privacy & Terms";
+        p4.style.color = "white";
+        let pfiller = document.createElement("p");
+        a1.append(p1);
+        a2.append(p2);
+        a3.append(p3);
+        a4.append(p4);
+        menudiv.appendChild(a1);
+        menudiv.appendChild(a2);
+        menudiv.appendChild(a3);
+        menudiv.appendChild(a4);
+        menudiv.appendChild(pfiller);
+      }
+      //Add toggle components in menu
+      let cacheArray = [...Object.keys(window.aaron.common.toggles2.queueToBeAdded)];
+      for (let toggleInd = 0;toggleInd < cacheArray.length;toggleInd++) {
+        let key = cacheArray[toggleInd];
+        let value = window.aaron.common.toggles2.queueToBeAdded[key];
+        let div = document.createElement("div");
+        div.style.display = "flex";
+        div.style.textAlign = "center";
+        div.style.width = "max-content";
+        div.style.alignItems = "center";
+        let box = document.createElement("div");
+        box.style.width = "120px";
+        box.style.height = "52px";
+        // box.style.borderRadius = (parseInt(box.style.height)/2) + "px";
+        box.style.cursor = "pointer";
+        // box.style.border = "1px solid white";
+        box.style.position = "relative";
+        box.style.marginBottom = "5px";
+        let boxbackplateimg = document.createElement("img");
+        boxbackplateimg.style.width = "100%";
+        boxbackplateimg.style.height = "100%";
+        boxbackplateimg.style.left = "50%";
+        boxbackplateimg.style.top = "50%";
+        boxbackplateimg.style.transform = "translate(-50%,-50%)";
+        boxbackplateimg.style.position = "absolute";
+        boxbackplateimg.src = "https://media.discordapp.net/attachments/1027624236157779998/1041113288399933560/NEWBOX-012.png?width=1073&height=700";
+        let label = document.createElement("p");
+        label.innerText = key.replace(" ","\n");
+        label.style.userSelect = "none";
+        let toggle = document.createElement("toggle");
+        toggle.style.position = "absolute";
+        toggle.style.width = "50px";
+        toggle.style.height = "26px";
+        toggle.style.left = (parseInt(box.style.width)/2) + "px";
+        toggle.style.top = (parseInt(box.style.height)/2) + "px";
+        toggle.style.backgroundColor = "white";
+        toggle.style.transform = "translate(-5%, -50%)";
+        toggle.style.transition = ".25s";
+        toggle.style.borderRadius = (parseInt(toggle.style.height)/2) + "px";
+        function updateState () {
+          if (getCookie(value) === "true") {
+            toggle.style.transform = "translate(-5%, -50%)";
+            toggle.dataset.isOnState = "true";
+            // box.style.backgroundColor = "rgb(46,124,175)";
+          } else if (getCookie(value) === "false") {
+            toggle.style.transform = "translate(-95%, -50%)";
+            toggle.dataset.isOnState = "false";
+            // box.style.backgroundColor = "rgba(0,0,0,0)";
+          } else {
+            console.log("ERROR: toggles2 found no cookie");
+          }
+          if (key == "Background Gif") { //If is for background
+            if (getCookie(value) === "true") {
+              let root = document.getElementById("root");
+              root.style.backgroundImage = 'url({{ "common.bg.gif" | asset_url }})';
+              root.dataset.togglebggifon = "true";
+            } else {
+              let root = document.getElementById("root");
+              root.style.backgroundImage = '';
+              root.dataset.togglebggifon = "false";
+            }
+          } else if (key == "Model Gif") { //If is for collection grid
+            let cookieValue = getCookie("togglegridgifon");
+            //Handle if toggles2 loads first
+            if (cookieValue != "true") {
+              window.aaron.common.toggles2.togglegridgifon = "false";
+            } else {
+              window.aaron.common.toggles2.togglegridgifon = "true";
+            }
+            //Handle if collection grid loads first
+            for (let productimg of document.getElementsByClassName("collectiongridimg")) {
+              if (cookieValue != "true") {
+                productimg.dataset.srcactive = productimg.dataset.srcstatic;
+                if (productimg.src != "https://imgur.com/e7GGFtS.png")
+                  productimg.src = productimg.dataset.srcstatic;
+              } else {
+                productimg.dataset.srcactive = productimg.dataset.srcgif;
+                if (productimg.src != "https://imgur.com/e7GGFtS.png")
+                  productimg.src = productimg.dataset.srcgif;
+              }
+            }
+          }
+        }
+        updateState();
+        box.onclick = function () {
+          if (getCookie(value) == "true") {
+            setCookie(value, "false", 365);
+            updateState();
+          } else {
+            setCookie(value, "true", 365);
+            updateState();
+          }
+        }
+        let root = document.getElementById("root");
+        box.appendChild(boxbackplateimg);
+        box.appendChild(toggle);
+        div.appendChild(box);
+        div.appendChild(label);
+        menudiv.appendChild(div);
+        delete window.aaron.common.toggles2.queueToBeAdded[cacheArray[toggleInd]];
+      }
+
+      if (deviceType == "pc" || deviceType == "tablet") {
+        //Layout is handled outisde of grid constraints
+      } else {
+        console.log("toggles2: phone");
+        window.aaron.common.toggles2.AttemptAddSearch();
+      }
+  
+      Resize();
+    };
+    Activate = function () {
+      //No Activate
+    };
+    Resize = function () {
+      window.aaron.common.sizing.DefaultSetSize(buttondiv, buttonimg, true);
+    };
+    window.aaron.common.toggles2.AttemptAddSearch = function () {
+      console.log("toggles2: 1");
+      if (window.aaron.common.resizetextarea != null && window.aaron.common.resizetextarea.SearchInputRef != null && isSearchAdded == false) {
+        console.log("toggles2: 2");
+        isSearchAdded = true;
+        window.aaron.common.resizetextarea.SearchInputRef.style.position = "";
+        window.aaron.common.resizetextarea.SearchInputRef.style.border = "solid 1px white";
+        window.aaron.common.resizetextarea.SearchInputRef.style.height = "20px";
+        window.aaron.common.resizetextarea.SearchInputRef.style.lineHeight = "";
+        menudiv.prepend(window.aaron.common.resizetextarea.SearchInputRef);
+      }
+      menudiv.style.gridTemplateRows = "repeat(" + (menudiv.childNodes.length) + ", 60px)";
+    };
+    window.aaron.common.modulebasics.StartupFuncs.push(Startup);
+    // window.aaron.common.modulebasics.AddElemsFuncs.push(AddElems);
+    // window.aaron.common.modulebasics.ActivateFuncs.push(Activate);
+    window.aaron.common.modulebasics.ResizeFuncs.push(Resize);
+  }
+</script>

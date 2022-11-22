@@ -1,0 +1,102 @@
+(function () {
+  if (typeof window.aaron == "undefined")
+    window.aaron = new Object();
+  if (typeof window.aaron.greeting == "undefined")
+    window.aaron.greeting = new Object();
+  if (typeof window.aaron.greeting.initoverlay == "undefined")
+    window.aaron.greeting.initoverlay = new Object();
+  window.aaron.greeting.initoverlay.elementsGeneratedFlag = false;
+})();
+
+window.aaron.greeting.initoverlay.InitiateFade = function (div) {
+  let particleElem = window.aaron.greeting.initoverlay.particleElem;
+  if (particleElem) {
+    particleElem.stop();
+    particleElem.canvas.remove();
+  }
+  document.getElementById("cteimg").remove();
+  let timeArray = [0,1000];
+  let valueArray = [1,0];
+  let startingTime = Date.now();
+  function interpolate (index, timeDelta) {
+    let t1 = timeArray[index];
+    let t2 = timeArray[index+1];
+    let v1 = valueArray[index];
+    let v2 = valueArray[index+1];
+    let v = v1 + (timeDelta-t1)*(v2-v1)/(t2-t1);
+    return v;
+  }
+  let interval = window.setInterval(()=>{
+    let timeDelta = Date.now() - startingTime;
+    for (let index = timeArray.length - 1;index >= 0;index--) {
+      let tKey = timeArray[index];
+      if (timeDelta > tKey) {
+        if (tKey == timeArray[timeArray.length-1]) {
+          div.remove();
+          window.clearInterval(interval);
+          break;
+        }
+        let value = interpolate(index, timeDelta);
+        div.style.opacity = value;
+        break;
+      }
+    }
+  },10);
+}
+
+window.aaron.greeting.initoverlay.AddElems = function () {
+  let root = document.getElementById("root");
+  
+  let div = document.createElement("div");
+  div.id = "greetingoverlaydiv";
+  div.style.backgroundColor = "black";
+  div.style.position = "absolute";
+  div.style.left = "0px";
+  div.style.top = "0px";
+  div.style.width = vw + "px";
+  div.style.height = vh + "px";
+  div.style.zIndex = 1000;
+  div.addEventListener('click', (event) => {
+    let root = document.getElementById("root");
+    if (root.dataset.togglebgon != "false") {
+      root.style.backgroundImage = 'url({{ "common.bg.gif" | asset_url }})';
+    }
+    overlayAudioCache.play();
+    window.aaron.greeting.initoverlay.InitiateFade(div);
+    for (let f of window.aaron.greeting.globe.activateFunctions)
+      f();
+    if (window.aaron.collection && window.aaron.collection.grid.ActivationFunction)
+      window.aaron.collection.grid.ActivationFunction();
+  });
+
+  let img1 = document.createElement("img");
+  img1.id = "nextparticlelogo";
+  img1.alt = "BlueBrainPlanet";
+  img1.src = '{{ section.settings.logoimg | image_url: width: 512 }}';
+  img1.dataset.initPosition = "none";
+  img1.dataset.initDirection = "none";
+  img1.style.visibility = "hidden";
+
+  let img2 = document.createElement("img");
+  img2.id = "cteimg";
+  img2.alt = "background";
+  img2.style.transform = "translate(-50%,-50%)";
+  img2.style.position = "absolute";
+  img2.style.zIndex = 1001;
+  img2.ondragstart = function () {return false;};
+
+  div.appendChild(img1);
+  div.appendChild(img2);
+  root.appendChild(div);
+}
+
+window.aaron.greeting.initoverlay.GenerateOverlay = function () {
+  if (!window.aaron.greeting.initoverlay.elementsGeneratedFlag) {
+    window.aaron.greeting.initoverlay.AddElems();
+    window.aaron.greeting.initoverlay.elementsGeneratedFlag = true;
+  }
+}
+window.aaron.greeting.initoverlay.GenerateOverlay();
+
+<!-- let overlayAudioCache = new Audio("https://cdn.shopify.com/s/files/1/0321/3737/9975/files/entirestudios.mp3?v=1664417216"); -->
+let overlayAudioCache = new Audio("https://cdn.shopify.com/s/files/1/0321/3737/9975/files/BBP_SOUND.m4a?v=1665790747");

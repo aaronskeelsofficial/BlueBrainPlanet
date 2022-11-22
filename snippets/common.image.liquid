@@ -1,0 +1,70 @@
+<script>
+  (function () {
+    if (typeof window.aaron == "undefined")
+      window.aaron = new Object();
+    if (typeof window.aaron.common == "undefined")
+      window.aaron.common = new Object();
+    if (typeof window.aaron.common.image == "undefined")
+      window.aaron.common.image = new Object();
+  })();
+
+  if (((deviceType == "pc" || deviceType == "tablet") && '{{ block.settings.pcimg }}' != "")
+      || (deviceType == "phone" && '{{ block.settings.phoneimg }}' != "")) {
+    //Hoist funcs
+    let Startup, AddElems, Activate, Resize;
+    //Hoist vars
+    let img;
+    
+    Startup = function () {
+      //No Startup
+    };
+    AddElems = function () {
+      img = document.createElement("img");
+      img.id = '{{ block.settings.id }}';
+      img.classList.add("image");
+      img.style.position = "absolute";
+      img.style.margin = "0px";
+      img.style.transform = "translate(-50%,-50%)";
+      img.style.zIndex = {{ block.settings.zindex }};
+      img.style.visibility = "hidden";
+      img.dataset.anchor='{{ block.settings.anchor }}';
+      img.dataset.pcsizingmode='{{ block.settings.pcsizingmode }}';
+      img.dataset.pcsizewidth='{{ block.settings.pcsizewidth }}';
+      img.dataset.pcsizeheight='{{ block.settings.pcsizeheight }}';
+      img.dataset.pcx='{{ block.settings.pcx }}';
+      img.dataset.pcy='{{ block.settings.pcy }}';
+      img.dataset.phonesizingmode='{{ block.settings.phonesizingmode }}';
+      img.dataset.phonesizewidth='{{ block.settings.phonesizewidth }}';
+      img.dataset.phonesizeheight='{{ block.settings.phonesizeheight }}';
+      img.dataset.phonex='{{ block.settings.phonex }}';
+      img.dataset.phoney='{{ block.settings.phoney }}';
+      if (deviceType == "pc" || deviceType == "tablet")
+        img.src = '{{ block.settings.pcimg | image_url }}?width={{ block.settings.pcapproxsize }}'
+      else if (deviceType == "phone")
+        img.src = '{{ block.settings.phoneimg | image_url }}?width={{ block.settings.phoneapproxsize }}'
+      img.ondragstart = function () {
+        return false;
+      }
+  
+      let root = document.getElementById("root");
+      root.appendChild(img);
+  
+      img.onload = Resize;
+    };
+    Activate = function () {
+      //No Activate
+    };
+    Resize = function () {
+      window.aaron.common.sizing.DefaultSetSize(img, img, true);
+      if (window.aaron && window.aaron.common && window.aaron.common.resizetextarea && window.aaron.common.resizetextarea.pendingTextareas && window.aaron.common.resizetextarea.pendingTextareas[img.id]) {
+        let imgMeasurement = img.getBoundingClientRect();
+        for (let f of window.aaron.common.resizetextarea.pendingTextareas[img.id])
+          f(imgMeasurement.left, imgMeasurement.top);
+      }
+    };
+    // window.aaron.common.modulebasics.StartupFuncs.push(Startup);
+    window.aaron.common.modulebasics.AddElemsFuncs.push(AddElems);
+    // window.aaron.common.modulebasics.ActivateFuncs.push(Activate);
+    window.aaron.common.modulebasics.ResizeFuncs.push(Resize);
+  }
+</script>

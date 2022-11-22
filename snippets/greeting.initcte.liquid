@@ -1,0 +1,18 @@
+
+  function GenerateCTEImage () {
+    let cteimg = document.getElementById("cteimg");
+    if (cteimg.src == "") {
+      cteimg.src = '{{ section.settings.cteimg | image_url: width: 5760 }}';
+      cteimg.style.position = "absolute";
+    }
+
+    let originalRatio = 318/133;
+    let tempWidthCalc = (deviceType == "pc" || deviceType == "tablet") ? {{ section.settings.ctemaxsizepc }} / 100 : {{ section.settings.ctemaxsizephone }} / 100;
+    let w = vw*tempWidthCalc;
+    let tempHeightCalc = (deviceType == "pc" || deviceType == "tablet") ? {{ section.settings.ctepageheightpc }} / 100 : {{ section.settings.ctepageheightphone }} / 100;
+    cteimg.style.width = w + "px";
+    cteimg.style.height = (w/originalRatio) + "px";
+    cteimg.style.top = (vh*tempHeightCalc) + "px";
+    cteimg.style.left = (vw*.5) + "px";
+  }
+  GenerateCTEImage();

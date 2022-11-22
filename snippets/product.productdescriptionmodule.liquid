@@ -1,0 +1,100 @@
+<script>
+  (function () {
+    if (typeof window.aaron == "undefined")
+      window.aaron = new Object();
+    if (typeof window.aaron.product == "undefined")
+      window.aaron.product = new Object();
+    if (typeof window.aaron.product.productdescriptionmodule == "undefined")
+      window.aaron.product.productdescriptionmodule = new Object();
+  })();
+  
+  (function () {
+    //Hoist funcs
+    let Startup, AddElems, Activate, Resize;
+    //Hoist vars
+    let div;
+
+    Startup = function () {
+      //No Startup
+    };
+    AddElems = function () {
+      div = document.createElement("div");
+      div.classList.add("productdescriptionmodule");
+      div.id = '{{ block.settings.scrollid }}';
+      div.readOnly = '';
+      div.style.position = "absolute";
+      div.style.margin = "0px";
+      div.style.visibility = "hidden";
+      div.style.zIndex = {{ block.settings.zindex }};
+      div.style.fontFamily = "{{ block.settings.fontfamily }}";
+      div.style.background = '{{ block.settings.colorbackground }}';
+      div.style.overflowWrap = "break-word";
+      div.style.overflowY = "scroll";
+      div.innerHTML = `{{ product.description }}`;
+  
+      let root = document.getElementById("root");
+      root.appendChild(div);
+
+      Resize();
+
+      if (window != null && window.aaron != null && window.aaron.common != null && window.aaron.common.scrollbar != null && window.aaron.common.scrollbar.pending != null) {
+        let scrollID = '{{ block.settings.scrollid }}';
+        if (typeof window.aaron.common.scrollbar.pending[scrollID] != "undefined") {
+          window.aaron.common.scrollbar.pending[scrollID]();
+          delete window.aaron.common.scrollbar.pending[scrollID];
+        }
+      }
+    };
+    Activate = function () {
+      //No Activate
+    };
+    Resize = function () {
+      let imageID = '{{ block.settings.targetimgid }}';
+      let img = document.getElementById(imageID);
+      function doStuff (imgLeft, imgTop) {
+        img = document.getElementById(imageID);
+        let originalTotalWidth = img.naturalWidth;
+        let originalTotalHeight = img.naturalHeight;
+        let originalTopLeft, originalBottomRight;
+        if (deviceType == "pc" || deviceType == "tablet") {
+          originalTopLeft = [{{ block.settings.pctopleftx }}, {{ block.settings.pctoplefty }}];
+          originalBottomRight = [{{ block.settings.pcbottomrightx }}, {{ block.settings.pcbottomrighty }}];
+        } else if (deviceType == "phone") {
+          originalTopLeft = [{{ block.settings.phonetopleftx }}, {{ block.settings.phonetoplefty }}];
+          originalBottomRight = [{{ block.settings.phonebottomrightx }}, {{ block.settings.phonebottomrighty }}];
+        }
+        let widthRatio = parseInt(img.style.width) / originalTotalWidth;
+        let heightRatio = parseInt(img.style.height) / originalTotalHeight;
+        let resizedTopLeft = [originalTopLeft[0]*widthRatio, originalTopLeft[1]*heightRatio];
+        let resizedBottomRight = [originalBottomRight[0]*widthRatio, originalBottomRight[1]*heightRatio];
+        let height = (resizedBottomRight[1] - resizedTopLeft[1]);
+        div.style.left = (imgLeft + resizedTopLeft[0]) + "px";
+        div.style.top = (imgTop + resizedTopLeft[1]) + "px";
+        div.style.width = (resizedBottomRight[0] - resizedTopLeft[0]) + "px";
+        div.style.height = height + "px";
+        let tempFontHeightCalc = height * {{ block.settings.fontsize }}/100;
+        div.style.fontSize = tempFontHeightCalc + "px";
+        div.style.visibility = "visible";
+        //Handle common.scrollbar if applicable
+        if (window != null && window.aaron != null && window.aaron.common != null && window.aaron.common.scrollbar != null && window.aaron.common.scrollbar.resizefuncs != null) {
+          let scrollID = '{{ block.settings.scrollid }}';
+          if (typeof window.aaron.common.scrollbar.resizefuncs[scrollID] != "undefined") {
+            window.aaron.common.scrollbar.resizefuncs[scrollID]();
+          }
+        }
+      }
+      if (img == null || img.naturalWidth == 0 || img.getBoundingClientRect().left < 0) {
+        if (!Object.keys(window.aaron.common.resizetextarea.pendingTextareas).includes(imageID))
+          window.aaron.common.resizetextarea.pendingTextareas[imageID] = [];
+        window.aaron.common.resizetextarea.pendingTextareas[imageID].push(doStuff);
+      } else {
+        let imgMeasurement = img.getBoundingClientRect();
+        doStuff(imgMeasurement.left, imgMeasurement.top);
+      }
+    };
+    // window.aaron.common.modulebasics.StartupFuncs.push(Startup);
+    window.aaron.common.modulebasics.AddElemsFuncs.push(AddElems);
+    // window.aaron.common.modulebasics.ActivateFuncs.push(Activate);
+    window.aaron.common.modulebasics.ResizeFuncs.push(Resize);
+  })();
+</script>

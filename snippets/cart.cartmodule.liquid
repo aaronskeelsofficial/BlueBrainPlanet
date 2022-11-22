@@ -1,0 +1,207 @@
+<script>
+  (function () {
+    if (typeof window.aaron == "undefined")
+      window.aaron = new Object();
+    if (typeof window.aaron.cart == "undefined")
+      window.aaron.cart = new Object();
+    if (typeof window.aaron.cart.cartmodule == "undefined")
+      window.aaron.cart.cartmodule = new Object();
+    window.aaron.cart.cartmodule.cart = [];
+  })();
+
+  if (((deviceType == "pc" || deviceType == "tablet") && '{{ block.settings.pcimg }}' != "")
+      || (deviceType == "phone" && '{{ block.settings.phoneimg }}' != "")) {
+    //Hoist funcs
+    let Startup, AddElems, Activate, Resize;
+    //Hoist vars
+    let div,backplatediv,backplateimg,productsdiv;
+    
+    Startup = function () {
+      {% for line_item in cart.items %}
+        for (let i = 0;i < 5;i++)
+          window.aaron.cart.cartmodule.cart.push({{ line_item | json }});
+      {% endfor %}
+    };
+    AddElems = function () {
+      div = document.createElement("div");
+      div.classList.add("cartmodule");
+      div.style.position = "absolute";
+      div.style.visibility = "hidden";
+      div.dataset.rowheight = "100";
+
+      backplatediv = document.createElement("div");
+      backplatediv.style.position = "absolute";
+      backplatediv.style.margin = "0px";
+      backplatediv.style.transform = "translate(-50%,-50%)";
+      backplatediv.style.zIndex = {{ block.settings.zindex }};
+      backplatediv.dataset.anchor='{{ block.settings.anchor }}';
+      backplatediv.dataset.pcsizingmode='{{ block.settings.pcsizingmode }}';
+      backplatediv.dataset.pcsizewidth='{{ block.settings.pcsizewidth }}';
+      backplatediv.dataset.pcsizeheight='{{ block.settings.pcsizeheight }}';
+      backplatediv.dataset.pcx='{{ block.settings.pcx }}';
+      backplatediv.dataset.pcy='{{ block.settings.pcy }}';
+      backplatediv.dataset.phonesizingmode='{{ block.settings.phonesizingmode }}';
+      backplatediv.dataset.phonesizewidth='{{ block.settings.phonesizewidth }}';
+      backplatediv.dataset.phonesizeheight='{{ block.settings.phonesizeheight }}';
+      backplatediv.dataset.phonex='{{ block.settings.phonex }}';
+      backplatediv.dataset.phoney='{{ block.settings.phoney }}';
+      
+      backplateimg = document.createElement("img");
+      backplateimg.id = "{{ block.settings.id }}";
+      if (deviceType == "pc" || deviceType == "tablet")
+        backplateimg.src = '{{ block.settings.pcimg | image_url }}?width={{ block.settings.pcapproxsize }}'
+      else if (deviceType == "phone")
+        backplateimg.src = '{{ block.settings.phoneimg | image_url }}?width={{ block.settings.phoneapproxsize }}'
+      backplateimg.ondragstart = function () {
+        return false;
+      }
+      backplateimg.onload = Resize;
+
+      productsdiv = document.createElement("div");
+      productsdiv.style.position = "absolute";
+      productsdiv.style.zIndex = {{ block.settings.zindex }};
+      productsdiv.style.display = "grid";
+      productsdiv.style.gridTemplateRows = "repeat(" + window.aaron.cart.cartmodule.cart.length + "," + div.dataset.rowheight + "px)";
+      productsdiv.style.rowGap = "10px";
+      productsdiv.style.overflow = "hidden";
+      //Define scroll functions
+      productsdiv.onwheel = function (event) {
+        if (event.deltaY == 0)
+          return;
+
+        let delta = event.deltaY > 0 ? 100 : -100;
+        productsdiv.scroll({
+          top: productsdiv.scrollTop + delta,
+          left: 0,
+          behavior: 'smooth'
+        });
+      };
+      let touchY = 0;
+      let startScroll = 0;
+      productsdiv.ontouchstart = function (event) {
+        touchY = event.touches[0].pageY;
+        startScroll = productsdiv.scrollTop;
+      }
+      productsdiv.ontouchmove = function (event) {
+        deltaY = - (event.touches[0].pageY - touchY);
+        productsdiv.scroll({
+          top: startScroll + deltaY,
+          left: 0,
+          behavior: 'instant'
+        });
+      }
+      for (let lineitem of window.aaron.cart.cartmodule.cart) {
+        let productdiv = document.createElement("div");
+        productdiv.style.position = "relative";
+        productdiv.style.display = "flex";
+        let productimg = document.createElement("img");
+        productimg.src = lineitem.image + "&width=256";
+        productimg.style.position = "relative";
+        productimg.style.height = div.dataset.rowheight + "px";
+        productimg.style.width = div.dataset.rowheight + "px";
+        productimg.ondragstart = function () {
+          return false;
+        }
+        let infodiv = document.createElement("div");
+        infodiv.style.alignSelf = "center";
+        let titlep = document.createElement("p");
+        titlep.innerText = lineitem.product_title;
+        let optionsp = document.createElement("p");
+        let optionsStr = "";
+        for (let optionwval of lineitem.options_with_values) {
+          optionsStr = optionsStr + optionwval.name + ": " + optionwval.value + "  ";
+        }
+        optionsp.innerText = optionsStr;
+        let quantitydiv = document.createElement("div");
+        quantitydiv.style.display = "flex";
+        let quantityp = document.createElement("p");
+        quantityp.innerText = "Quantity:";
+        let quantityinput = document.createElement("input");
+        quantityinput.type = "number";
+        quantityinput.value = lineitem.quantity;
+        quantityinput.dataset.quantity = lineitem.quantity + "";
+        quantityinput.min = 0;
+        quantityinput.maxLength = 2;
+        quantityinput.size = 2;
+        quantityinput.style.border = "none";
+        quantityinput.style.padding = "0px";
+        quantityinput.style.maxWidth = "50px";
+        quantityinput.dataset.lineitemkey = lineitem.key;
+        quantityinput.addEventListener('change',()=>{
+          let checkouttext = document.getElementById("checkout");
+          if (quantityinput.value != quantityinput.dataset.quantity && checkouttext.value != "Update Cart") {
+            checkouttext.value = "Update Cart";
+          }
+        });
+
+        infodiv.appendChild(titlep);
+        infodiv.appendChild(optionsp);
+        quantitydiv.appendChild(quantityp);
+        quantitydiv.appendChild(quantityinput);
+        infodiv.appendChild(quantitydiv);
+        productdiv.appendChild(productimg);
+        productdiv.appendChild(infodiv);
+        productsdiv.appendChild(productdiv);
+      }
+  
+      let root = document.getElementById("root");
+      backplatediv.appendChild(backplateimg);
+      div.appendChild(backplatediv);
+      div.appendChild(productsdiv);
+      root.appendChild(div);
+    };
+    Activate = function () {
+      //No Activate
+    };
+    Resize = function () {
+      div.style.visibility = "visible";
+      window.aaron.common.sizing.DefaultSetSize(backplatediv, backplateimg, false);
+      backplateimg.style.width = backplatediv.style.width;
+      backplateimg.style.height = backplatediv.style.height;
+      if (window.aaron && window.aaron.common && window.aaron.common.resizetextarea && window.aaron.common.resizetextarea.pendingTextareas && window.aaron.common.resizetextarea.pendingTextareas[backplateimg.id]) {
+        let imgMeasurement = backplateimg.getBoundingClientRect();
+        for (let f of window.aaron.common.resizetextarea.pendingTextareas[backplateimg.id])
+          f(imgMeasurement.left, imgMeasurement.top);
+      }
+      function doStuff (backplateimgLeft, backplateimgTop) {
+        let originalTotalWidth = backplateimg.naturalWidth;
+        let originalTotalHeight = backplateimg.naturalHeight;
+        let originalTopLeft, originalBottomRight;
+        if (deviceType == "pc" || deviceType == "tablet") {
+          originalTopLeft = [{{ block.settings.pctopleftx }}, {{ block.settings.pctoplefty }}];
+          originalBottomRight = [{{ block.settings.pcbottomrightx }}, {{ block.settings.pcbottomrighty }}];
+        } else if (deviceType == "phone") {
+          originalTopLeft = [{{ block.settings.phonetopleftx }}, {{ block.settings.phonetoplefty }}];
+          originalBottomRight = [{{ block.settings.phonebottomrightx }}, {{ block.settings.phonebottomrighty }}];
+        }
+        let widthRatio = parseInt(backplatediv.style.width) / originalTotalWidth;
+        let heightRatio = parseInt(backplatediv.style.height) / originalTotalHeight;
+        let resizedTopLeft = [originalTopLeft[0]*widthRatio, originalTopLeft[1]*heightRatio];
+        let resizedBottomRight = [originalBottomRight[0]*widthRatio, originalBottomRight[1]*heightRatio];
+        let height = (resizedBottomRight[1] - resizedTopLeft[1]);
+        productsdiv.style.left = (backplateimgLeft + resizedTopLeft[0]) + "px";
+        productsdiv.style.top = (backplateimgTop + resizedTopLeft[1]) + "px";
+        productsdiv.style.width = (resizedBottomRight[0] - resizedTopLeft[0]) + "px";
+        productsdiv.style.height = height + "px";
+        let tempFontHeightCalc = deviceType == "pc" || deviceType == "tablet" ? div.dataset.rowheight * {{ block.settings.pcfontsize }}/100 : div.dataset.rowheight * {{ block.settings.phonefontsize }}/100;
+        productsdiv.style.fontSize = tempFontHeightCalc + "px";
+        for (let productdiv of productsdiv.childNodes){
+          let infodiv = productdiv.childNodes[1];
+          let quantitydiv = infodiv.childNodes[2];
+          let quantityinput = quantitydiv.childNodes[1];
+          quantityinput.style.height = tempFontHeightCalc + "px";
+        }
+      }
+      if (backplateimg == null || backplateimg.naturalWidth == 0 || backplateimg.getBoundingClientRect().left < 0) {
+        //Do nothing bc backplate hasn't loaded
+      } else {
+        let backplateimgMeasurement = backplateimg.getBoundingClientRect();
+        doStuff(backplateimgMeasurement.left, backplateimgMeasurement.top);
+      }
+    };
+    window.aaron.common.modulebasics.StartupFuncs.push(Startup);
+    window.aaron.common.modulebasics.AddElemsFuncs.push(AddElems);
+    // window.aaron.common.modulebasics.ActivateFuncs.push(Activate);
+    window.aaron.common.modulebasics.ResizeFuncs.push(Resize);
+  }
+</script>

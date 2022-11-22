@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="{{ shop.locale }}">
+<head>
+  {{ content_for_header }}
+  <!-- Orbitron import -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=B612+Mono:wght@700&family=Orbitron:wght@600&display=swap" rel="stylesheet"> 
+
+  <!-- Reset css -->
+  <link rel="stylesheet" href='{{ 'common.reset.css' | asset_url }}'>
+
+  <!-- Setup Meta and Stuff -->
+  <meta charset="utf-8">
+  <title>Blue Brain Planet</title>
+  <meta name="description" content="AN ORGANIZATION EXHIBITING THE SKILLS AND PASSIONS BY OUR TEAM TO EMPHASIZE THE CORRUPTION IN THIS BLUE BRAINED PLANET.">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta property="og:title" content="Blue Brain Planet">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://bluebrainplanet.com">
+<!--   <meta property="og:image" content=""> This is handled by shopify -->
+  {% if settings.favicon %}
+    <link rel="shortcut icon" href="{{ settings.favicon | img_url: '32x32' }}" type="image/png" />
+  {% endif %}
+</head>
+
+<body>
+  {{content_for_layout}}
+</body>
+</html>

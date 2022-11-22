@@ -1,0 +1,77 @@
+if (deviceType == "pc" || deviceType == "tablet") {
+  let NextParticleElem = null;
+  function GenerateParticleLogo () {
+    let particleElem;
+    if (NextParticleElem == null) {
+      let elem = document.all.nextparticlelogo;
+      NextParticleElem = new NextParticle(elem);
+      particleElem = NextParticleElem;
+      particleElem.width = 0;
+      particleElem.height = 1;
+      particleElem.particleGap = 1;
+      particleElem.gravity = .29;
+      particleElem.mouseForce = 10;
+      particleElem.noise = 26;
+      particleElem.renderer = "webgl";
+      particleElem.particleSize = 1;
+      particleElem.layerCount = 1;
+      particleElem.depth = "particle-gap";
+      particleElem.initPosition = "top";
+      particleElem.initDirection = "none";
+    } else {
+      particleElem = NextParticleElem;
+    }
+
+    if (!particleElem.canvas) {
+      let hasRanFlag = false;
+      function waitForCanvasLoad () {
+        if (particleElem.canvas && !hasRanFlag) {
+          window.aaron.greeting.initoverlay.particleElem = particleElem;
+          particleElem.canvas.style.position = "absolute";
+          particleElem.canvas.style.left = (.5 * vw) + "px";
+          let tempHeightCalc = {{ section.settings.logopageheight }} / 100;
+          particleElem.canvas.style.top = (tempHeightCalc * vh) + "px";
+          particleElem.canvas.style.transform = "translate(-50%,-50%)"
+          particleElem.canvas.style.zIndex = 1002;
+          let tempSizeCalc = {{ section.settings.logomaxsize }} / 100;
+          let size = Math.round(Math.min((tempSizeCalc * vw), (tempSizeCalc * vh)));
+          particleElem.width = size;
+          particleElem.height = size;
+          particleElem.start();
+          hasRanFlag = true;
+          clearInterval(intervalID);
+        }
+      }
+      let intervalID;
+      intervalID = setInterval(waitForCanvasLoad, 5);
+    } else {
+      particleElem.canvas.style.left = (.5 * vw) + "px";
+      let tempHeightCalc = {{ section.settings.logopageheight }} / 100;
+      particleElem.canvas.style.top = (tempHeightCalc * vh) + "px";
+      let tempSizeCalc = {{ section.settings.logomaxsize }} / 100;
+      let size = Math.round(Math.min((tempSizeCalc * vw), (tempSizeCalc * vh)));
+      particleElem.width = size;
+      particleElem.height = size;
+      particleElem.start();
+    }
+  }
+  GenerateParticleLogo();
+}
+
+else if (deviceType == "phone") {
+  let img = document.all.nextparticlelogo;
+  img.style.visibility = "visible";
+  img.style.position = "absolute";
+  img.style.left = (.5 * vw) + "px";
+  let tempHeightCalc = {{ section.settings.logopageheight }} / 100;
+  img.style.top = (tempHeightCalc * vh) + "px";
+  img.style.transform = "translate(-50%,-50%)"
+  img.style.zIndex = 1002;
+  let tempSizeCalc = {{ section.settings.logomaxsize }} / 100;
+  let size = Math.round(Math.min((tempSizeCalc * vw), (tempSizeCalc * vh)));
+  img.style.width = size + "px";
+  img.style.height = size + "px";
+  img.ondragstart = function () {
+    return false;
+  }
+}

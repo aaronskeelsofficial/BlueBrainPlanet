@@ -1,0 +1,316 @@
+<script>
+  (function () {
+    if (typeof window.aaron == "undefined")
+      window.aaron = new Object();
+    if (typeof window.aaron.product == "undefined")
+      window.aaron.product = new Object();
+    if (typeof window.aaron.product.productmediamodule == "undefined")
+      window.aaron.product.productmediamodule = new Object();
+    window.aaron.product.productmediamodule.products = [];
+    window.aaron.product.productmediamodule.variants = [];
+    window.aaron.product.productmediamodule.selectedMediaIndex = 0;
+  })();
+
+  if (((deviceType == "pc" || deviceType == "tablet") && '{{ block.settings.pcimg }}' != "")
+      || (deviceType == "phone" && '{{ block.settings.phoneimg }}' != "")) {
+
+    (function (){
+      //Load products into js from shopify's dumbass liquid
+      let curVariantID = -1; //Define here so isn't redefined in Liquid loop.
+      window.aaron.product.productmediamodule.products.push({{ product | json }});
+      {% for variant in product.variants %}
+        curVariantID = '{{ variant.id }}';
+        for (let varInd = 0; varInd < window.aaron.product.productmediamodule.products[window.aaron.product.productmediamodule.products.length-1].variants.length; varInd++) {
+          let checkVariant = window.aaron.product.productmediamodule.products[window.aaron.product.productmediamodule.products.length-1].variants[varInd];
+          if (checkVariant.id == curVariantID) {
+            window.aaron.product.productmediamodule.products[window.aaron.product.productmediamodule.products.length-1].variants[varInd].inventory_quantity = {{ variant.inventory_quantity }};
+          }
+        }
+      {% endfor %}
+
+      //Handle adding single or all variants
+      for (let product of window.aaron.product.productmediamodule.products) {
+        let colorsFoundArray = [];
+        let colorOptionIndex = -1;
+        for (let i = 0;i < product.options.length;i++) {
+          if (product.options[i].toLowerCase().includes("color")) {
+            colorOptionIndex = i;
+            i = product.options.length;
+          }
+        }
+        for (let variant of product.variants) {
+          if (!colorsFoundArray.includes(variant.options[colorOptionIndex])) {
+            variant.parentProduct = product;
+            window.aaron.product.productmediamodule.variants.push(variant);
+            colorsFoundArray.push(variant.options[colorOptionIndex]);
+          }
+        }
+      }
+    })();
+
+    window.aaron.product.productmediamodule.GetSelectedMediaIndex = function (variant) {
+      //Load all options into array but size is ""
+      let optionsSelected = [];
+      for (let i = 0;i < variant.options.length;i++) {
+        if (window.aaron.product.productmediamodule.products[0].options[i].toLowerCase().includes("size"))
+          optionsSelected.push("");
+        else
+          optionsSelected.push(variant.options[i]);
+      }
+      //Loop through all variant images, get their id, and check if that variant is comparable
+      let mediaDiv = document.getElementsByClassName("productmediamodule")[0].childNodes[1];
+      for (let i = 0;i < mediaDiv.childNodes.length;i++) {
+        let mediaImg = mediaDiv.childNodes[i];
+        let otherVariantIndex = mediaImg.dataset.variantIndex;
+        if (typeof otherVariantIndex == "undefined") //Is a pic of something other than a specific variant
+          continue;
+        let otherVariant = window.aaron.product.productmediamodule.variants[otherVariantIndex];
+        let mismatchFlag = false;
+        for (let j = 0;j < otherVariant.options.length;j++) {
+          if (optionsSelected[j] != "" && optionsSelected[j] != otherVariant.options[j])
+            mismatchFlag = true;
+        }
+        if (!mismatchFlag)
+          return i;
+      }
+    };
+
+    window.aaron.product.productmediamodule.SetSize = function (div, backplate, mediaDiv, leftScrollImg, rightScrollImg) {
+      //Handle div
+      window.aaron.common.sizing.DefaultSetSize(div, backplate, true);
+      //backplate doesn't change
+      //Handle mediaDiv
+      let mediaDivWidth = parseInt(div.style.width) * {{ block.settings.pcproductswidth }}/100;
+      let mediaDivHeight = parseInt(div.style.height) * {{ block.settings.pcproductsheight }}/100;
+      mediaDiv.style.width = mediaDivWidth + "px";
+      mediaDiv.style.height = mediaDivHeight + "px";
+      mediaDiv.style.gridTemplateRows = mediaDivHeight + "px";
+      mediaDiv.style.gridTemplateColumns = "repeat(" + mediaDiv.childNodes.length + "," + mediaDivHeight + "px)";
+      mediaDiv.style.overflow = "hidden";
+      //Handle mediaImg's
+      for (let i = 0;i < window.aaron.product.productmediamodule.products[0].images.length;i++) {
+        let mediaImg = mediaDiv.childNodes[i];
+        if (mediaImg.dataset.selected == "true") {
+          mediaImg.style.width = (mediaDivHeight - 6) + "px";
+          mediaImg.style.height = (mediaDivHeight - 6) + "px";
+          // mediaImg.style.border = "solid black 3px";
+          // mediaImg.style.borderRadius = "15px";
+        } else {
+          mediaImg.style.width = mediaDivHeight + "px";
+          mediaImg.style.height = mediaDivHeight + "px";
+          // mediaImg.style.border = "";
+          // mediaImg.style.borderRadius = "";
+        }
+      }
+      //Handle leftScrollImg
+      let divMeasure = div.getBoundingClientRect();
+      let mediaDivMeasure = mediaDiv.getBoundingClientRect();
+      if (leftScrollImg.naturalWidth) {
+        // leftScrollImg.style.width = (mediaDivHeight * leftScrollImg.naturalWidth/leftScrollImg.naturalHeight) + "px";
+        leftScrollImg.style.height = "15%";
+        let offset = parseInt(leftScrollImg.style.width);
+        leftScrollImg.style.left = ((mediaDivMeasure.left - divMeasure.left) - 0) + "px";
+      } else {
+        leftScrollImg.onload = function() {
+          // leftScrollImg.style.width = (mediaDivHeight * leftScrollImg.naturalWidth/leftScrollImg.naturalHeight) + "px";
+          leftScrollImg.style.height = "15%";
+          let offset = parseInt(leftScrollImg.style.width);
+          leftScrollImg.style.left = ((mediaDivMeasure.left - divMeasure.left) - 0) + "px";
+        };
+      }
+      leftScrollImg.style.top = "50%";
+      //Handle rightScrollImg
+      if (rightScrollImg.naturalWidth) {
+        // rightScrollImg.style.width = (mediaDivHeight * rightScrollImg.naturalWidth/rightScrollImg.naturalHeight) + "px";
+        rightScrollImg.style.height = "15%";
+        let offset = parseInt(rightScrollImg.style.width);
+        rightScrollImg.style.left = (((mediaDivMeasure.left + mediaDivMeasure.width) - divMeasure.left) + 0) + "px";
+      } else {
+        rightScrollImg.onload = function () {
+          // rightScrollImg.style.width = (mediaDivHeight * rightScrollImg.naturalWidth/rightScrollImg.naturalHeight) + "px";
+          rightScrollImg.style.height = "15%";
+          let offset = parseInt(rightScrollImg.style.width);
+          rightScrollImg.style.left = (((mediaDivMeasure.left + mediaDivMeasure.width) - divMeasure.left) + 0) + "px";
+        };
+      }
+      rightScrollImg.style.top = "50%";
+    };
+    
+    (function () {
+      let div = document.createElement("div");
+      div.classList.add("productmediamodule");
+      div.style.position = "absolute";
+      div.style.margin = "0px";
+      div.style.transform = "translate(-50%,-50%)";
+      div.style.zIndex = {{ block.settings.zindex }};
+      div.style.visibility = "hidden";
+      div.dataset.anchor='{{ block.settings.anchor }}';
+      div.dataset.pcsizingmode='{{ block.settings.pcsizingmode }}';
+      div.dataset.pcsizewidth='{{ block.settings.pcsizewidth }}';
+      div.dataset.pcsizeheight='{{ block.settings.pcsizeheight }}';
+      div.dataset.pcx='{{ block.settings.pcx }}';
+      div.dataset.pcy='{{ block.settings.pcy }}';
+      div.dataset.pcproductwidth='{{ block.settings.pcproductwidth }}'
+      div.dataset.phonesizingmode='{{ block.settings.phonesizingmode }}';
+      div.dataset.phonesizewidth='{{ block.settings.phonesizewidth }}';
+      div.dataset.phonesizeheight='{{ block.settings.phonesizeheight }}';
+      div.dataset.phonex='{{ block.settings.phonex }}';
+      div.dataset.phoney='{{ block.settings.phoney }}';
+      div.dataset.phoneproductwidth='{{ block.settings.phoneproductwidth }}'
+      div.ondragstart = function () {
+        return false;
+      }
+
+      let backplate = document.createElement("img");
+      backplate.style.width = "100%";
+      backplate.style.height = "100%";
+      if (deviceType == "pc" || deviceType == "tablet")
+        backplate.src = '{{ block.settings.pcimg | image_url: width: original }}' + "&width=" + '{{ block.settings.pcapproxsize }}';
+      else if (deviceType == "phone")
+        backplate.src = '{{ block.settings.phoneimg | image_url: width: original }}' + "&width=" + '{{ block.settings.phoneapproxsize }}';
+
+      let mediaDiv = document.createElement("div");
+      mediaDiv.style.position = "absolute";
+      mediaDiv.style.left = "50%";
+      mediaDiv.style.top = "50%";
+      mediaDiv.style.transform = "translate(-50%,-50%)";
+      mediaDiv.style.display = "grid";
+
+      for (let i = 0;i < window.aaron.product.productmediamodule.products[0].images.length;i++) {
+        let mediaImg = document.createElement("div");
+		let mediaImgImg = document.createElement("img");
+		let borderImg = document.createElement("img");
+        let imgurl;
+        if (window.aaron.product.productmediamodule.variants.length != 1) { //If numerous variants
+          if (i == 0 || i > window.aaron.product.productmediamodule.variants.length)
+            imgurl = window.aaron.product.productmediamodule.products[0].images[i];
+          else {
+            imgurl = window.aaron.product.productmediamodule.variants[i-1].featured_image.src;
+            mediaImg.dataset.variantIndex = (i-1);
+          }
+        } else { //If only 1 variant
+          if (i == 0) {
+            imgurl = window.aaron.product.productmediamodule.variants[i].featured_image.src;
+            mediaImg.dataset.variantIndex = i;
+          } else {
+            imgurl = window.aaron.product.productmediamodule.products[0].images[i];
+          }
+        }
+        mediaImgImg.src = imgurl;
+        mediaImg.style.cursor = "pointer";
+		mediaImg.style.top = "50%";
+		mediaImg.style.position = "relative";
+		mediaImg.style.transform = "translate(0,-50%)";
+        mediaImgImg.style.height = "100%";
+        mediaImgImg.style.width = "100%";
+		borderImg.id = "selectedmediaborder";
+		borderImg.src = "https://cdn.shopify.com/s/files/1/0321/3737/9975/files/SITESQUARE.png?v=1665873061&width=128";
+		borderImg.style.position = "absolute";
+		borderImg.style.transform = "translate(-50%,0)";
+        borderImg.style.left = "50%";
+        borderImg.style.height = "100%";
+        window.aaron.product.productmediamodule.UpdateSelectedMedia = function (index) {
+          resizeImage();
+          //Handle ProductMediaModule
+          for (let i = 0;i < mediaDiv.childNodes.length;i++) {
+            let mediaImg = mediaDiv.childNodes[i];
+            if (i == index) {
+              mediaImg.dataset.selected = "true";
+			  mediaImg.childNodes[0].style.visibility = "visible";
+            } else {
+              mediaImg.dataset.selected = "false";
+			  mediaImg.childNodes[0].style.visibility = "hidden";
+			}
+          }
+        };
+        mediaImg.onclick = function () {
+          //Update productmediamodule
+          window.aaron.product.productmediamodule.UpdateSelectedMedia(i);
+          //Update productdetailsmodule
+          if (typeof mediaImg.dataset.variantIndex != "undefined") { //If img represents a variant bc has variantIndex
+            let variant = window.aaron.product.productmediamodule.variants[mediaImg.dataset.variantIndex];
+            let div = document.getElementsByClassName("productdetailsmodule")[0];
+            let divoptions = div.childNodes[2];
+            for (let i = 0;i < divoptions.childNodes.length;i++) {
+              let divoption = divoptions.childNodes[i];
+              let poption = divoption.childNodes[0];
+              if (!poption.innerText.substring(0,poption.innerText.length-1).toLowerCase().includes("size")) {
+                let soption = divoption.childNodes[1];
+                soption.value = variant.options[i];
+              }
+            }
+            //This function handles all above
+            window.aaron.product.productdetailsmodule.ChangeDetected(true);
+          } else {
+            //Update URL - EDIT: Don't Do This
+            // let queryMap = window.aaron.common.urltool.GetQueries();
+            // delete queryMap.variant;
+            // window.aaron.common.urltool.UpdateQueries(queryMap, false);
+            //Update product graphic
+            window.aaron.product.productmodule.Update(mediaImgImg.src);
+          }
+        };
+        //
+		mediaImg.appendChild(borderImg);
+		mediaImg.appendChild(mediaImgImg);
+        mediaDiv.appendChild(mediaImg);
+      }
+
+      let leftScrollImg = document.createElement("img");
+      leftScrollImg.style.position = "absolute";
+      leftScrollImg.src = "https://cdn.shopify.com/s/files/1/0321/3737/9975/files/SITEICON2.png?v=1665868935";
+      leftScrollImg.style.opacity = 1;
+      leftScrollImg.style.transform = "translate(-100%, -50%) scaleX(-1)";
+      leftScrollImg.style.cursor = "pointer";
+      leftScrollImg.onclick = function () {
+        mediaDiv.scroll({
+          top: 0,
+          left: (mediaDiv.scrollLeft - mediaDiv.childNodes[0].getBoundingClientRect().width),
+          behavior: "smooth"
+        });
+      };
+      let rightScrollImg = document.createElement("img");
+      rightScrollImg.style.position = "absolute";
+      rightScrollImg.src = "https://cdn.shopify.com/s/files/1/0321/3737/9975/files/SITEICON2.png?v=1665868935";
+      rightScrollImg.style.opacity = 1;
+      rightScrollImg.style.transform = "translate(0, -50%) scaleX(1)";
+      rightScrollImg.style.cursor = "pointer";
+      rightScrollImg.onclick = function () {
+        mediaDiv.scroll({
+          top: 0,
+          left: (mediaDiv.scrollLeft + mediaDiv.childNodes[0].getBoundingClientRect().width),
+          behavior: "smooth"
+        });
+      };
+  
+      let root = document.getElementById("root");
+      div.appendChild(backplate);
+      div.appendChild(mediaDiv);
+      div.appendChild(leftScrollImg);
+      div.appendChild(rightScrollImg);
+      root.appendChild(div);
+
+      function resizeImage () {
+        window.aaron.product.productmediamodule.SetSize(div, backplate, mediaDiv, leftScrollImg, rightScrollImg);
+      }
+      backplate.onload = resizeImage;
+      window.aaron.common.sizing.resizeFunctions.push(resizeImage);
+
+      //Handle identifying if variant is selected
+      let queries = window.aaron.common.urltool.GetQueries();
+      let keys = Object.keys(queries);
+      if (keys.includes("variant")) {
+        for (let variant of window.aaron.product.productmediamodule.products[0].variants) {
+          if (variant.id == queries.variant)
+            window.aaron.product.productmediamodule.selectedMediaIndex = window.aaron.product.productmediamodule.GetSelectedMediaIndex(variant);
+        }
+      } else {
+        window.aaron.product.productmediamodule.selectedMediaIndex = 0;
+      }
+
+      //Handle updating selected image. Function is hoisted and defined above though.
+      window.aaron.product.productmediamodule.UpdateSelectedMedia(window.aaron.product.productmediamodule.selectedMediaIndex);
+
+    })();
+  }
+</script>

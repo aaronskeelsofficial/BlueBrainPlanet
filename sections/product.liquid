@@ -1,0 +1,1714 @@
+<div id="root" style="position: absolute;left: 0px;top: 0px;width: 100vw;height: 100vh;background-position: center;background-size: cover;overflow: hidden;">
+  {% for block in section.blocks %}
+    {% case block.type %}
+      {% when 'RedirectButton' %}
+        {% include 'common.redirectbutton' %}
+      {% when 'Image' %}
+        {% include 'common.image' %}
+      {% when 'ResizeTextarea' %}
+        {% include 'common.resizetextarea' %}
+      {% when 'Scrollbar' %}
+        {% include 'common.scrollbar' %}
+      {% when 'Toggles' %}
+        {% include 'common.toggles2' %}
+      {% when 'ProductModule' %}
+        {% include 'product.productmodule' %}
+      {% when 'ProductMediaModule' %}
+        {% include 'product.productmediamodule' %}
+      {% when 'ProductDescriptionModule' %}
+        {% include 'product.productdescriptionmodule' %}
+      {% when 'ProductDetailsModule' %}
+        {% include 'product.productdetailsmodule' %}
+    {% endcase %}
+  {% endfor %}
+</div>
+
+<script>
+  function UpdateBGActivate () {
+    if (deviceType == "pc" || deviceType == "tablet") {
+      function doStuff () {
+        document.body.removeEventListener('mousemove',doStuff);
+        let root = document.getElementById("root");
+        if (root.dataset.togglebgon != "false") {
+          root.style.backgroundImage = 'url({{ "common.bg.gif" | asset_url }})';
+        }
+      }
+      document.body.addEventListener('mousemove', doStuff);
+    } else if (deviceType == "phone") {
+      window.setTimeout(()=>{
+        let root = document.getElementById("root");
+        if (root.dataset.togglebgon != "false") {
+          root.style.backgroundImage = 'url({{ "common.bg.gif" | asset_url }}?width=1024)';
+        }
+      },1);
+    }
+  }
+  window.aaron.common.modulebasics.ActivateFuncs.push(UpdateBGActivate);
+</script>
+
+{% schema %}
+  {
+    "name": "Product Settings",
+    "blocks": [
+      {
+        "type": "RedirectButton",
+        "name": "Redirect Button",
+        "settings": [
+          {
+            "type": "url",
+            "id": "redirecturl",
+            "label": "Redirect URL"
+          },
+          {
+            "type": "text",
+            "id": "redirecturloverride",
+            "label": "Redirect URL Override (Optional)"
+          },
+          {
+            "type": "number",
+            "id": "zindex",
+            "label": "Image Visual Layer",
+            "default": 1
+          },
+          {
+            "type": "select",
+            "id": "anchor",
+            "label": "Image Anchor Point",
+            "options": [
+              {
+                "value": "topleft",
+                "label": "Top Left"
+              },
+              {
+                "value": "topmiddle",
+                "label": "Top Middle"
+              },
+              {
+                "value": "topright",
+                "label": "Top Right"
+              },
+              {
+                "value": "middleleft",
+                "label": "Middle Left"
+              },
+              {
+                "value": "middle",
+                "label": "Middle"
+              },
+              {
+                "value": "middleright",
+                "label": "Middle Right"
+              },
+              {
+                "value": "bottomleft",
+                "label": "Bottom Left"
+              },
+              {
+                "value": "bottommiddle",
+                "label": "Bottom Middle"
+              },
+              {
+                "value": "bottomright",
+                "label": "Bottom Right"
+              }
+            ],
+            "default": "middle"
+          },
+          {
+            "type": "text",
+            "id": "id",
+            "label": "Image ID (Optional)"
+          },
+          {
+            "type": "image_picker",
+            "id": "pcimg",
+            "label": "Image (PC)"
+          },
+          {
+            "type": "select",
+            "id": "pcapproxsize",
+            "label": "Image Approximate Size (PC)",
+            "options": [
+              {
+                "value": "64",
+                "label": "~64 Pixels"
+              },
+              {
+                "value": "128",
+                "label": "~128 Pixels"
+              },
+              {
+                "value": "256",
+                "label": "~256 Pixels"
+              },
+              {
+                "value": "512",
+                "label": "~512 Pixels"
+              },
+              {
+                "value": "1024",
+                "label": "~1024 Pixels"
+              },
+              {
+                "value": "2048",
+                "label": "~2048 Pixels"
+              },
+              {
+                "value": "4096",
+                "label": "~4096 Pixels"
+              }
+            ],
+            "default": "2048"
+          },
+          {
+            "type": "text",
+            "id": "pcclickableimg",
+            "label": "Image Clickability SVG Code (PC)"
+          },
+          {
+            "type": "select",
+            "id": "pcsizingmode",
+            "label": "Image Sizing Mode (PC)",
+            "options": [
+              {
+                "value": "widthAutoHeight",
+                "label": "Define Width - Keep Ratio Height"
+              },
+              {
+                "value": "heightAutoWidth",
+                "label": "Define Height - Keep Ratio Width"
+              },
+              {
+                "value": "explicit",
+                "label": "Define Height & Width"
+              }
+            ],
+            "default": "widthAutoHeight"
+          },
+          {
+            "type": "number",
+            "id": "pcsizewidth",
+            "label": "Image Width Size % (PC)",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "pcsizeheight",
+            "label": "Image Height Size % (PC)",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "pcx",
+            "label": "Image X Percentage (PC)",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "pcy",
+            "label": "Image Y Percentage (PC)",
+            "default": 50
+          },
+          {
+            "type": "image_picker",
+            "id": "phoneimg",
+            "label": "Image (Phone)"
+          },
+          {
+            "type": "select",
+            "id": "phoneapproxsize",
+            "label": "Image Approximate Size (Phone)",
+            "options": [
+              {
+                "value": "64",
+                "label": "~64 Pixels"
+              },
+              {
+                "value": "128",
+                "label": "~128 Pixels"
+              },
+              {
+                "value": "256",
+                "label": "~256 Pixels"
+              },
+              {
+                "value": "512",
+                "label": "~512 Pixels"
+              },
+              {
+                "value": "1024",
+                "label": "~1024 Pixels"
+              },
+              {
+                "value": "2048",
+                "label": "~2048 Pixels"
+              },
+              {
+                "value": "4096",
+                "label": "~4096 Pixels"
+              }
+            ],
+            "default": "512"
+          },
+          {
+            "type": "text",
+            "id": "phoneclickableimg",
+            "label": "Image Clickability SVG Code (Phone)"
+          },
+          {
+            "type": "select",
+            "id": "phonesizingmode",
+            "label": "Image Sizing Mode (Phone)",
+            "options": [
+              {
+                "value": "widthAutoHeight",
+                "label": "Define Width - Keep Ratio Height"
+              },
+              {
+                "value": "heightAutoWidth",
+                "label": "Define Height - Keep Ratio Width"
+              },
+              {
+                "value": "explicit",
+                "label": "Define Height & Width"
+              }
+            ],
+            "default": "widthAutoHeight"
+          },
+          {
+            "type": "number",
+            "id": "phonesizewidth",
+            "label": "Image Width Size % (Phone)",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "phonesizeheight",
+            "label": "Image Height Size % (Phone)",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "phonex",
+            "label": "Image X Percentage (Phone)",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "phoney",
+            "label": "Image Y Percentage (Phone)",
+            "default": 50
+          }
+        ]
+      },
+      {
+        "type": "Image",
+        "name": "Image",
+        "settings": [
+          {
+            "type": "number",
+            "id": "zindex",
+            "label": "Image Visual Layer",
+            "default": 1
+          },
+          {
+            "type": "select",
+            "id": "anchor",
+            "label": "Image Anchor Point",
+            "options": [
+              {
+                "value": "topleft",
+                "label": "Top Left"
+              },
+              {
+                "value": "topmiddle",
+                "label": "Top Middle"
+              },
+              {
+                "value": "topright",
+                "label": "Top Right"
+              },
+              {
+                "value": "middleleft",
+                "label": "Middle Left"
+              },
+              {
+                "value": "middle",
+                "label": "Middle"
+              },
+              {
+                "value": "middleright",
+                "label": "Middle Right"
+              },
+              {
+                "value": "bottomleft",
+                "label": "Bottom Left"
+              },
+              {
+                "value": "bottommiddle",
+                "label": "Bottom Middle"
+              },
+              {
+                "value": "bottomright",
+                "label": "Bottom Right"
+              }
+            ],
+            "default": "middle"
+          },
+          {
+            "type": "text",
+            "id": "id",
+            "label": "Image ID (Optional)"
+          },
+          {
+            "type": "image_picker",
+            "id": "pcimg",
+            "label": "Image (PC)"
+          },
+          {
+            "type": "select",
+            "id": "pcapproxsize",
+            "label": "Image Approximate Size (PC)",
+            "options": [
+              {
+                "value": "64",
+                "label": "~64 Pixels"
+              },
+              {
+                "value": "128",
+                "label": "~128 Pixels"
+              },
+              {
+                "value": "256",
+                "label": "~256 Pixels"
+              },
+              {
+                "value": "512",
+                "label": "~512 Pixels"
+              },
+              {
+                "value": "1024",
+                "label": "~1024 Pixels"
+              },
+              {
+                "value": "2048",
+                "label": "~2048 Pixels"
+              },
+              {
+                "value": "4096",
+                "label": "~4096 Pixels"
+              }
+            ],
+            "default": "2048"
+          },
+          {
+            "type": "select",
+            "id": "pcsizingmode",
+            "label": "Image Sizing Mode (PC)",
+            "options": [
+              {
+                "value": "widthAutoHeight",
+                "label": "Define Width - Keep Ratio Height"
+              },
+              {
+                "value": "heightAutoWidth",
+                "label": "Define Height - Keep Ratio Width"
+              },
+              {
+                "value": "explicit",
+                "label": "Define Height & Width"
+              }
+            ],
+            "default": "widthAutoHeight"
+          },
+          {
+            "type": "number",
+            "id": "pcsizewidth",
+            "label": "Image Width Size % (PC)",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "pcsizeheight",
+            "label": "Image Height Size % (PC)",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "pcx",
+            "label": "Image X Percentage (PC)",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "pcy",
+            "label": "Image Y Percentage (PC)",
+            "default": 50
+          },
+          {
+            "type": "image_picker",
+            "id": "phoneimg",
+            "label": "Image (Phone)"
+          },
+          {
+            "type": "select",
+            "id": "phoneapproxsize",
+            "label": "Image Approximate Size (Phone)",
+            "options": [
+              {
+                "value": "64",
+                "label": "~64 Pixels"
+              },
+              {
+                "value": "128",
+                "label": "~128 Pixels"
+              },
+              {
+                "value": "256",
+                "label": "~256 Pixels"
+              },
+              {
+                "value": "512",
+                "label": "~512 Pixels"
+              },
+              {
+                "value": "1024",
+                "label": "~1024 Pixels"
+              },
+              {
+                "value": "2048",
+                "label": "~2048 Pixels"
+              },
+              {
+                "value": "4096",
+                "label": "~4096 Pixels"
+              }
+            ],
+            "default": "512"
+          },
+          {
+            "type": "select",
+            "id": "phonesizingmode",
+            "label": "Image Sizing Mode (Phone)",
+            "options": [
+              {
+                "value": "widthAutoHeight",
+                "label": "Define Width - Keep Ratio Height"
+              },
+              {
+                "value": "heightAutoWidth",
+                "label": "Define Height - Keep Ratio Width"
+              },
+              {
+                "value": "explicit",
+                "label": "Define Height & Width"
+              }
+            ],
+            "default": "widthAutoHeight"
+          },
+          {
+            "type": "number",
+            "id": "phonesizewidth",
+            "label": "Image Width Size % (Phone)",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "phonesizeheight",
+            "label": "Image Height Size % (Phone)",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "phonex",
+            "label": "Image X Percentage (Phone)",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "phoney",
+            "label": "Image Y Percentage (Phone)",
+            "default": 50
+          }
+        ]
+      },
+      {
+        "type": "ResizeTextarea",
+        "name": "Resizing Textbox",
+        "settings": [
+          {
+            "type": "number",
+            "id": "zindex",
+            "label": "Visual Layer",
+            "default": 1
+          },
+          {
+            "type": "text",
+            "id": "scrollid",
+            "label": "Scroll ID"
+          },
+          {
+            "type": "text",
+            "id": "targetimgid",
+            "label": "Target Image ID"
+          },
+          {
+            "type": "number",
+            "id": "pctopleftx",
+            "label": "Topleft X Pixel (Left-to-right) (PC)",
+            "default": 0
+          },
+          {
+            "type": "number",
+            "id": "pctoplefty",
+            "label": "Topleft Y Pixel (Top-to-bottom) (PC)",
+            "default": 0
+          },
+          {
+            "type": "number",
+            "id": "pcbottomrightx",
+            "label": "Bottomright X Pixel (Left-to-right) (PC)",
+            "default": 600
+          },
+          {
+            "type": "number",
+            "id": "pcbottomrighty",
+            "label": "Bottomright Y Pixel (Top-to-bottom) (PC)",
+            "default": 600
+          },
+          {
+            "type": "number",
+            "id": "phonetopleftx",
+            "label": "Topleft X Pixel (Left-to-right) (Phone)",
+            "default": 0
+          },
+          {
+            "type": "number",
+            "id": "phonetoplefty",
+            "label": "Topleft Y Pixel (Top-to-bottom) (Phone)",
+            "default": 0
+          },
+          {
+            "type": "number",
+            "id": "phonebottomrightx",
+            "label": "Bottomright X Pixel (Left-to-right) (Phone)",
+            "default": 300
+          },
+          {
+            "type": "number",
+            "id": "phonebottomrighty",
+            "label": "Bottomright Y Pixel (Top-to-bottom) (Phone)",
+            "default": 300
+          },
+          {
+            "type": "textarea",
+            "id": "startertext",
+            "label": "Starter Text (Optional)",
+            "default": "I am the text in the box"
+          },
+          {
+            "type": "text",
+            "id": "placeholder",
+            "label": "Phantom Text Shown When Editable and Empty (Optional)",
+            "default": "Please enter your email..."
+          },
+          {
+            "type": "checkbox",
+            "id": "readonly",
+            "label": "Read Only",
+            "default": false
+          },
+          {
+            "type": "text",
+            "id": "fontfamily",
+            "label": "Font Family",
+            "default": "'Orbitron', sans-serif"
+          },
+          {
+            "type": "number",
+            "id": "fontsize",
+            "label": "Font Height % (Percent of Total Heigh Per Character)",
+            "default": 80
+          },
+          {
+            "type": "color_background",
+            "id": "colorbackground",
+            "label": "Background Color",
+            "default": "linear-gradient(57deg, rgba(54, 212, 255, 0), rgba(43, 252, 135, 0) 100%)"
+          },
+          {
+            "type": "checkbox",
+            "id": "resizable",
+            "label": "Resizable",
+            "default": false
+          },
+          {
+            "type": "checkbox",
+            "id": "showborder",
+            "label": "Show Border",
+            "default": true
+          },
+          {
+            "type": "checkbox",
+            "id": "showoutline",
+            "label": "Show Outline When Typing",
+            "default": true
+          },
+          {
+            "type": "checkbox",
+            "id": "singleline",
+            "label": "Format Like Single Line Input",
+            "default": true
+          },
+          {
+            "type": "radio",
+            "id": "customfunction",
+            "label": "Custom Functionality",
+            "options": [
+              {
+                "value": "none",
+                "label": "None"
+              },
+              {
+                "value": "search",
+                "label": "Search"
+              },
+              {
+                "value": "emailsub",
+                "label": "Email Sub"
+              },
+              {
+                "value": "addtocart",
+                "label": "Add To Cart"
+              },
+              {
+                "value": "checkout",
+                "label": "Checkout"
+              }
+            ],
+            "default": "none"
+          }
+        ]
+      },
+      {
+        "type": "Scrollbar",
+        "name": "Scrollbar",
+        "settings": [
+          {
+            "type": "text",
+            "id": "targetscrollid",
+            "label": "Target Scroll ID"
+          },
+          {
+            "type": "number",
+            "id": "scrollstrength",
+            "label": "Scroll Strength",
+            "default": 100
+          },
+          {
+            "type": "select",
+            "id": "pcwidthmode",
+            "label": "Width Mode (PC)",
+            "options": [
+              {
+                "value": "px",
+                "label": "Pixels"
+              },
+              {
+                "value": "perc",
+                "label": "Percent"
+              }
+            ],
+            "default": "px"
+          },
+          {
+            "type": "number",
+            "id": "pcwidthvalue",
+            "label": "Width Value (px or %) (PC)",
+            "default": 10
+          },
+          {
+            "type": "number",
+            "id": "pcoffset",
+            "label": "Scrollbar Offset % (Typically 0 or 100) (PC)",
+            "default": 0
+          },
+          {
+            "type": "select",
+            "id": "phonewidthmode",
+            "label": "Width Mode (Phone)",
+            "options": [
+              {
+                "value": "px",
+                "label": "Pixels"
+              },
+              {
+                "value": "perc",
+                "label": "Percent"
+              }
+            ],
+            "default": "px"
+          },
+          {
+            "type": "number",
+            "id": "phonewidthvalue",
+            "label": "Width Value (px or %) (Phone)",
+            "default": 5
+          },
+          {
+            "type": "number",
+            "id": "phoneoffset",
+            "label": "Scrollbar Offset % (Typically 0 or 100) (Phone)",
+            "default": 0
+          }
+        ]
+      },
+      {
+        "type": "Toggles",
+        "name": "Toggles",
+        "limit": 1,
+        "settings": [
+          {
+            "type": "number",
+            "id": "zindex",
+            "label": "Visual Layer",
+            "default": 1
+          },
+          {
+            "type": "select",
+            "id": "pcanchor",
+            "label": "Anchor Point (PC)",
+            "options": [
+              {
+                "value": "topleft",
+                "label": "Top Left"
+              },
+              {
+                "value": "topmiddle",
+                "label": "Top Middle"
+              },
+              {
+                "value": "topright",
+                "label": "Top Right"
+              },
+              {
+                "value": "middleleft",
+                "label": "Middle Left"
+              },
+              {
+                "value": "middle",
+                "label": "Middle"
+              },
+              {
+                "value": "middleright",
+                "label": "Middle Right"
+              },
+              {
+                "value": "bottomleft",
+                "label": "Bottom Left"
+              },
+              {
+                "value": "bottommiddle",
+                "label": "Bottom Middle"
+              },
+              {
+                "value": "bottomright",
+                "label": "Bottom Right"
+              }
+            ],
+            "default": "middle"
+          },
+          {
+            "type": "image_picker",
+            "id": "pcimg",
+            "label": "Image (PC)"
+          },
+          {
+            "type": "select",
+            "id": "pcapproxsize",
+            "label": "Image Approximate Size (PC)",
+            "options": [
+              {
+                "value": "64",
+                "label": "~64 Pixels"
+              },
+              {
+                "value": "128",
+                "label": "~128 Pixels"
+              },
+              {
+                "value": "256",
+                "label": "~256 Pixels"
+              },
+              {
+                "value": "512",
+                "label": "~512 Pixels"
+              },
+              {
+                "value": "1024",
+                "label": "~1024 Pixels"
+              },
+              {
+                "value": "2048",
+                "label": "~2048 Pixels"
+              },
+              {
+                "value": "4096",
+                "label": "~4096 Pixels"
+              }
+            ],
+            "default": "2048"
+          },
+          {
+            "type": "select",
+            "id": "pcsizingmode",
+            "label": "Image Sizing Mode (PC)",
+            "options": [
+              {
+                "value": "widthAutoHeight",
+                "label": "Define Width - Keep Ratio Height"
+              },
+              {
+                "value": "heightAutoWidth",
+                "label": "Define Height - Keep Ratio Width"
+              },
+              {
+                "value": "explicit",
+                "label": "Define Height & Width"
+              }
+            ],
+            "default": "widthAutoHeight"
+          },
+          {
+            "type": "number",
+            "id": "pcsizewidth",
+            "label": "Image Width Size % (PC)",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "pcsizeheight",
+            "label": "Image Height Size % (PC)",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "pcx",
+            "label": "Image X Percentage (PC)",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "pcy",
+            "label": "Image Y Percentage (PC)",
+            "default": 50
+          },
+          {
+            "type": "select",
+            "id": "phoneanchor",
+            "label": "Anchor Point (Phone)",
+            "options": [
+              {
+                "value": "topleft",
+                "label": "Top Left"
+              },
+              {
+                "value": "topmiddle",
+                "label": "Top Middle"
+              },
+              {
+                "value": "topright",
+                "label": "Top Right"
+              },
+              {
+                "value": "middleleft",
+                "label": "Middle Left"
+              },
+              {
+                "value": "middle",
+                "label": "Middle"
+              },
+              {
+                "value": "middleright",
+                "label": "Middle Right"
+              },
+              {
+                "value": "bottomleft",
+                "label": "Bottom Left"
+              },
+              {
+                "value": "bottommiddle",
+                "label": "Bottom Middle"
+              },
+              {
+                "value": "bottomright",
+                "label": "Bottom Right"
+              }
+            ],
+            "default": "middle"
+          },
+          {
+            "type": "image_picker",
+            "id": "phoneimg",
+            "label": "Image (Phone)"
+          },
+          {
+            "type": "select",
+            "id": "phoneapproxsize",
+            "label": "Image Approximate Size (Phone)",
+            "options": [
+              {
+                "value": "64",
+                "label": "~64 Pixels"
+              },
+              {
+                "value": "128",
+                "label": "~128 Pixels"
+              },
+              {
+                "value": "256",
+                "label": "~256 Pixels"
+              },
+              {
+                "value": "512",
+                "label": "~512 Pixels"
+              },
+              {
+                "value": "1024",
+                "label": "~1024 Pixels"
+              },
+              {
+                "value": "2048",
+                "label": "~2048 Pixels"
+              },
+              {
+                "value": "4096",
+                "label": "~4096 Pixels"
+              }
+            ],
+            "default": "512"
+          },
+          {
+            "type": "select",
+            "id": "phonesizingmode",
+            "label": "Image Sizing Mode (Phone)",
+            "options": [
+              {
+                "value": "widthAutoHeight",
+                "label": "Define Width - Keep Ratio Height"
+              },
+              {
+                "value": "heightAutoWidth",
+                "label": "Define Height - Keep Ratio Width"
+              },
+              {
+                "value": "explicit",
+                "label": "Define Height & Width"
+              }
+            ],
+            "default": "widthAutoHeight"
+          },
+          {
+            "type": "number",
+            "id": "phonesizewidth",
+            "label": "Image Width Size % (Phone)",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "phonesizeheight",
+            "label": "Image Height Size % (Phone)",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "phonex",
+            "label": "Image X Percentage (Phone)",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "phoney",
+            "label": "Image Y Percentage (Phone)",
+            "default": 50
+          }
+        ]
+      },
+      {
+        "type": "ProductModule",
+        "name": "Product Module",
+        "limit": 1,
+        "settings": [
+          {
+            "type": "number",
+            "id": "zindex",
+            "label": "Visual Layer",
+            "default": 1
+          },
+          {
+            "type": "select",
+            "id": "anchor",
+            "label": "Backplate Anchor Point",
+            "options": [
+              {
+                "value": "topleft",
+                "label": "Top Left"
+              },
+              {
+                "value": "topmiddle",
+                "label": "Top Middle"
+              },
+              {
+                "value": "topright",
+                "label": "Top Right"
+              },
+              {
+                "value": "middleleft",
+                "label": "Middle Left"
+              },
+              {
+                "value": "middle",
+                "label": "Middle"
+              },
+              {
+                "value": "middleright",
+                "label": "Middle Right"
+              },
+              {
+                "value": "bottomleft",
+                "label": "Bottom Left"
+              },
+              {
+                "value": "bottommiddle",
+                "label": "Bottom Middle"
+              },
+              {
+                "value": "bottomright",
+                "label": "Bottom Right"
+              }
+            ],
+            "default": "middle"
+          },
+          {
+            "type": "image_picker",
+            "id": "pcimg",
+            "label": "Backplate Image (PC)"
+          },
+          {
+            "type": "select",
+            "id": "pcapproxsize",
+            "label": "Backplate Approximate Size (PC)",
+            "options": [
+              {
+                "value": "64",
+                "label": "~64 Pixels"
+              },
+              {
+                "value": "128",
+                "label": "~128 Pixels"
+              },
+              {
+                "value": "256",
+                "label": "~256 Pixels"
+              },
+              {
+                "value": "512",
+                "label": "~512 Pixels"
+              },
+              {
+                "value": "1024",
+                "label": "~1024 Pixels"
+              },
+              {
+                "value": "2048",
+                "label": "~2048 Pixels"
+              },
+              {
+                "value": "4096",
+                "label": "~4096 Pixels"
+              }
+            ],
+            "default": "2048"
+          },
+          {
+            "type": "select",
+            "id": "pcsizingmode",
+            "label": "Backplate Sizing Mode (PC)",
+            "options": [
+              {
+                "value": "widthAutoHeight",
+                "label": "Define Width - Keep Ratio Height"
+              },
+              {
+                "value": "heightAutoWidth",
+                "label": "Define Height - Keep Ratio Width"
+              },
+              {
+                "value": "explicit",
+                "label": "Define Height & Width"
+              }
+            ],
+            "default": "widthAutoHeight"
+          },
+          {
+            "type": "number",
+            "id": "pcsizewidth",
+            "label": "Backplate Width Size % (PC)",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "pcsizeheight",
+            "label": "Backplate Height Size % (PC)",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "pcx",
+            "label": "Backplate X Percentage (PC)",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "pcy",
+            "label": "Backplate Y Percentage (PC)",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "pcproductwidth",
+            "label": "Product Width % (PC)",
+            "default": 90
+          },
+          {
+            "type": "image_picker",
+            "id": "phoneimg",
+            "label": "Backplate Image (Phone)"
+          },
+          {
+            "type": "select",
+            "id": "phoneapproxsize",
+            "label": "Backplate Approximate Size (Phone)",
+            "options": [
+              {
+                "value": "64",
+                "label": "~64 Pixels"
+              },
+              {
+                "value": "128",
+                "label": "~128 Pixels"
+              },
+              {
+                "value": "256",
+                "label": "~256 Pixels"
+              },
+              {
+                "value": "512",
+                "label": "~512 Pixels"
+              },
+              {
+                "value": "1024",
+                "label": "~1024 Pixels"
+              },
+              {
+                "value": "2048",
+                "label": "~2048 Pixels"
+              },
+              {
+                "value": "4096",
+                "label": "~4096 Pixels"
+              }
+            ],
+            "default": "512"
+          },
+          {
+            "type": "select",
+            "id": "phonesizingmode",
+            "label": "Backplate Sizing Mode (Phone)",
+            "options": [
+              {
+                "value": "widthAutoHeight",
+                "label": "Define Width - Keep Ratio Height"
+              },
+              {
+                "value": "heightAutoWidth",
+                "label": "Define Height - Keep Ratio Width"
+              },
+              {
+                "value": "explicit",
+                "label": "Define Height & Width"
+              }
+            ],
+            "default": "widthAutoHeight"
+          },
+          {
+            "type": "number",
+            "id": "phonesizewidth",
+            "label": "Backplate Width Size % (Phone)",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "phonesizeheight",
+            "label": "Backplate Height Size % (Phone)",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "phonex",
+            "label": "Backplate X Percentage (Phone)",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "phoney",
+            "label": "Backplate Y Percentage (Phone)",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "phoneproductwidth",
+            "label": "Product Width % (Phone)",
+            "default": 90
+          },
+          {
+            "type": "number",
+            "id": "pcproductzoom",
+            "label": "Product Zoom on Hover (PC)",
+            "default": 3
+          }
+        ]
+      },
+      {
+        "type": "ProductMediaModule",
+        "name": "Product Media Module",
+        "limit": 1,
+        "settings": [
+          {
+            "type": "number",
+            "id": "zindex",
+            "label": "Visual Layer",
+            "default": 1
+          },
+          {
+            "type": "select",
+            "id": "anchor",
+            "label": "Backplate Anchor Point",
+            "options": [
+              {
+                "value": "topleft",
+                "label": "Top Left"
+              },
+              {
+                "value": "topmiddle",
+                "label": "Top Middle"
+              },
+              {
+                "value": "topright",
+                "label": "Top Right"
+              },
+              {
+                "value": "middleleft",
+                "label": "Middle Left"
+              },
+              {
+                "value": "middle",
+                "label": "Middle"
+              },
+              {
+                "value": "middleright",
+                "label": "Middle Right"
+              },
+              {
+                "value": "bottomleft",
+                "label": "Bottom Left"
+              },
+              {
+                "value": "bottommiddle",
+                "label": "Bottom Middle"
+              },
+              {
+                "value": "bottomright",
+                "label": "Bottom Right"
+              }
+            ],
+            "default": "middle"
+          },
+          {
+            "type": "image_picker",
+            "id": "pcimg",
+            "label": "Backplate Image (PC)"
+          },
+          {
+            "type": "select",
+            "id": "pcapproxsize",
+            "label": "Backplate Approximate Size (PC)",
+            "options": [
+              {
+                "value": "64",
+                "label": "~64 Pixels"
+              },
+              {
+                "value": "128",
+                "label": "~128 Pixels"
+              },
+              {
+                "value": "256",
+                "label": "~256 Pixels"
+              },
+              {
+                "value": "512",
+                "label": "~512 Pixels"
+              },
+              {
+                "value": "1024",
+                "label": "~1024 Pixels"
+              },
+              {
+                "value": "2048",
+                "label": "~2048 Pixels"
+              },
+              {
+                "value": "4096",
+                "label": "~4096 Pixels"
+              }
+            ],
+            "default": "2048"
+          },
+          {
+            "type": "select",
+            "id": "pcsizingmode",
+            "label": "Backplate Sizing Mode (PC)",
+            "options": [
+              {
+                "value": "widthAutoHeight",
+                "label": "Define Width - Keep Ratio Height"
+              },
+              {
+                "value": "heightAutoWidth",
+                "label": "Define Height - Keep Ratio Width"
+              },
+              {
+                "value": "explicit",
+                "label": "Define Height & Width"
+              }
+            ],
+            "default": "widthAutoHeight"
+          },
+          {
+            "type": "number",
+            "id": "pcsizewidth",
+            "label": "Backplate Width Size % (PC)",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "pcsizeheight",
+            "label": "Backplate Height Size % (PC)",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "pcx",
+            "label": "Backplate X Percentage (PC)",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "pcy",
+            "label": "Backplate Y Percentage (PC)",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "pcproductswidth",
+            "label": "Products Width % (PC)",
+            "default": 90
+          },
+          {
+            "type": "number",
+            "id": "pcproductsheight",
+            "label": "Products Height % (PC)",
+            "default": 90
+          },
+          {
+            "type": "image_picker",
+            "id": "phoneimg",
+            "label": "Backplate Image (Phone)"
+          },
+          {
+            "type": "select",
+            "id": "phoneapproxsize",
+            "label": "Backplate Approximate Size (Phone)",
+            "options": [
+              {
+                "value": "64",
+                "label": "~64 Pixels"
+              },
+              {
+                "value": "128",
+                "label": "~128 Pixels"
+              },
+              {
+                "value": "256",
+                "label": "~256 Pixels"
+              },
+              {
+                "value": "512",
+                "label": "~512 Pixels"
+              },
+              {
+                "value": "1024",
+                "label": "~1024 Pixels"
+              },
+              {
+                "value": "2048",
+                "label": "~2048 Pixels"
+              },
+              {
+                "value": "4096",
+                "label": "~4096 Pixels"
+              }
+            ],
+            "default": "2048"
+          },
+          {
+            "type": "select",
+            "id": "phonesizingmode",
+            "label": "Backplate Sizing Mode (Phone)",
+            "options": [
+              {
+                "value": "widthAutoHeight",
+                "label": "Define Width - Keep Ratio Height"
+              },
+              {
+                "value": "heightAutoWidth",
+                "label": "Define Height - Keep Ratio Width"
+              },
+              {
+                "value": "explicit",
+                "label": "Define Height & Width"
+              }
+            ],
+            "default": "widthAutoHeight"
+          },
+          {
+            "type": "number",
+            "id": "phonesizewidth",
+            "label": "Backplate Width Size % (Phone)",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "phonesizeheight",
+            "label": "Backplate Height Size % (Phone)",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "phonex",
+            "label": "Backplate X Percentage (Phone)",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "phoney",
+            "label": "Backplate Y Percentage (Phone)",
+            "default": 50
+          },
+          {
+            "type": "number",
+            "id": "phoneproductswidth",
+            "label": "Products Width % (Phone)",
+            "default": 90
+          },
+          {
+            "type": "number",
+            "id": "phoneproductsheight",
+            "label": "Products Height % (Phone)",
+            "default": 90
+          }
+        ]
+      },
+      {
+        "type": "ProductDescriptionModule",
+        "name": "Product Desc. Module",
+        "limit": 1,
+        "settings": [
+          {
+            "type": "number",
+            "id": "zindex",
+            "label": "Visual Layer",
+            "default": 1
+          },
+          {
+            "type": "text",
+            "id": "targetimgid",
+            "label": "Target Image ID"
+          },
+          {
+            "type": "text",
+            "id": "scrollid",
+            "label": "Scroll ID"
+          },
+          {
+            "type": "number",
+            "id": "pctopleftx",
+            "label": "Topleft X Pixel (Left-to-right) (PC)",
+            "default": 0
+          },
+          {
+            "type": "number",
+            "id": "pctoplefty",
+            "label": "Topleft Y Pixel (Top-to-bottom) (PC)",
+            "default": 0
+          },
+          {
+            "type": "number",
+            "id": "pcbottomrightx",
+            "label": "Bottomright X Pixel (Left-to-right) (PC)",
+            "default": 600
+          },
+          {
+            "type": "number",
+            "id": "pcbottomrighty",
+            "label": "Bottomright Y Pixel (Top-to-bottom) (PC)",
+            "default": 600
+          },
+          {
+            "type": "number",
+            "id": "phonetopleftx",
+            "label": "Topleft X Pixel (Left-to-right) (Phone)",
+            "default": 0
+          },
+          {
+            "type": "number",
+            "id": "phonetoplefty",
+            "label": "Topleft Y Pixel (Top-to-bottom) (Phone)",
+            "default": 0
+          },
+          {
+            "type": "number",
+            "id": "phonebottomrightx",
+            "label": "Bottomright X Pixel (Left-to-right) (Phone)",
+            "default": 300
+          },
+          {
+            "type": "number",
+            "id": "phonebottomrighty",
+            "label": "Bottomright Y Pixel (Top-to-bottom) (Phone)",
+            "default": 300
+          },
+          {
+            "type": "text",
+            "id": "fontfamily",
+            "label": "Font Family",
+            "default": "'Orbitron', sans-serif"
+          },
+          {
+            "type": "number",
+            "id": "fontsize",
+            "label": "Font Height % (Percent of Total Heigh Per Character)",
+            "default": 80
+          },
+          {
+            "type": "color_background",
+            "id": "colorbackground",
+            "label": "Background Color",
+            "default": "linear-gradient(57deg, rgba(54, 212, 255, 0), rgba(43, 252, 135, 0) 100%)"
+          }
+        ]
+      },
+      {
+        "type": "ProductDetailsModule",
+        "name": "Product Det. Module",
+        "limit": 1,
+        "settings": [
+          {
+            "type": "number",
+            "id": "zindex",
+            "label": "Visual Layer",
+            "default": 1
+          },
+          {
+            "type": "text",
+            "id": "targetimgid",
+            "label": "Target Image ID"
+          },
+          {
+            "type": "number",
+            "id": "pctopleftx",
+            "label": "Topleft X Pixel (Left-to-right) (PC)",
+            "default": 0
+          },
+          {
+            "type": "number",
+            "id": "pctoplefty",
+            "label": "Topleft Y Pixel (Top-to-bottom) (PC)",
+            "default": 0
+          },
+          {
+            "type": "number",
+            "id": "pcbottomrightx",
+            "label": "Bottomright X Pixel (Left-to-right) (PC)",
+            "default": 600
+          },
+          {
+            "type": "number",
+            "id": "pcbottomrighty",
+            "label": "Bottomright Y Pixel (Top-to-bottom) (PC)",
+            "default": 600
+          },
+          {
+            "type": "number",
+            "id": "phonetopleftx",
+            "label": "Topleft X Pixel (Left-to-right) (Phone)",
+            "default": 0
+          },
+          {
+            "type": "number",
+            "id": "phonetoplefty",
+            "label": "Topleft Y Pixel (Top-to-bottom) (Phone)",
+            "default": 0
+          },
+          {
+            "type": "number",
+            "id": "phonebottomrightx",
+            "label": "Bottomright X Pixel (Left-to-right) (Phone)",
+            "default": 300
+          },
+          {
+            "type": "number",
+            "id": "phonebottomrighty",
+            "label": "Bottomright Y Pixel (Top-to-bottom) (Phone)",
+            "default": 300
+          },
+          {
+            "type": "text",
+            "id": "fontfamily",
+            "label": "Font Family",
+            "default": "'Orbitron', sans-serif"
+          },
+          {
+            "type": "number",
+            "id": "fontsize",
+            "label": "Font Height % (Percent of Total Heigh Per Character)",
+            "default": 80
+          },
+          {
+            "type": "color_background",
+            "id": "colorbackground",
+            "label": "Background Color",
+            "default": "linear-gradient(57deg, rgba(54, 212, 255, 0), rgba(43, 252, 135, 0) 100%)"
+          }
+        ]
+      }
+    ]
+  }
+{% endschema %}
+
+{% stylesheet %}
+{% endstylesheet %}
+
+{% javascript %}
+{% endjavascript %}
